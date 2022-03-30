@@ -16,10 +16,10 @@ LD := ld
 endif
 
 # User controllable CFLAGS.
-CFLAGS ?= -O2 -g -Wall -Wextra -pipe
+CFLAGS ?= -O2 -g -Wall -Wextra -pipe 
 
 # User controllable linker flags. We set none by default.
-LDFLAGS ?=
+LDFLAGS ?= -g
 
 # Internal C flags that should not be changed by the user.
 override INTERNALCFLAGS :=   \
@@ -62,7 +62,7 @@ stivale2.h:
 
 # Link rules for the final kernel executable.
 $(KERNEL): $(OBJ)
-	$(LD) $(OBJ) $(ASM_OBJ) $(LDFLAGS) $(INTERNALLDFLAGS) -o $@
+	$(LD) $(OBJ) $(ASM_OBJ) $(LDFLAGS) $(INTERNALLDFLAGS) -o $@ 
 
 # Compilation rules for *.c files.
 -include $(HEADER_DEPS)

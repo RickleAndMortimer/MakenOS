@@ -6,7 +6,7 @@ all-hdd: barebones.hdd
 
 .PHONY: run
 run: barebones.iso
-	qemu-system-x86_64 -M q35 -m 2G -cdrom barebones.iso -boot d
+	qemu-system-x86_64 -s -S -M q35 -m 2G -cdrom barebones.iso -boot d 
 
 .PHONY: run-uefi
 run-uefi: ovmf-x64 barebones.iso

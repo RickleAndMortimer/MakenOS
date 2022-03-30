@@ -2,6 +2,11 @@
 #include <idt.h>
 
 extern void* isr_stub_table[];
+idt64_entry_t idt_entries[256];
+idt64_ptr_t idt_ptr = (idt64_ptr_t) {
+    (uint16_t)sizeof(idt_entries) - 1,
+    (uintptr_t)&idt_entries[0]
+};
 
 void setIdtEntry(idt64_entry_t *target, uint64_t offset, uint16_t selector, uint8_t ist, uint8_t type_attributes) {
 	target->offset_1 = offset & 0xFFFF;
@@ -13,13 +18,8 @@ void setIdtEntry(idt64_entry_t *target, uint64_t offset, uint16_t selector, uint
 	target->zero = 0;
 }
 void initIdt() {
-	idt64_entry_t idt_entries[256];
-	idt64_ptr_t idt_ptr = (idt64_ptr_t) {
-        	(uint64_t)&idt_entries,
-        	sizeof(idt_entries) - 1
-	};
 	for (uint8_t i = 0; i < 32; i++) {
-		setIdtEntry(&idt_entries[i], *(uint64_t*)isr_stub_table[i], 0x28, 0, 0x8E);
+		setIdtEntry(&idt_entries[i], *((uint64_t*)isr_stub_table[i]), 0x28, 0, 0x8E);
 	}
 	asm volatile("lidt %0" : : "m"(idt_ptr));
 	asm volatile("sti");

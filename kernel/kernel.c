@@ -122,10 +122,11 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
     // We should now be able to call the above function pointer to print out
     // a simple "Hello World" to screen.
-    //
     term_write("hello", 5);
+    term_write("hello", 5);
+    initIdt();
+    asm volatile ("int $0x04");
     for (;;) {
-        asm ("hlt");
+	asm("hlt");
     }
- 
 }
