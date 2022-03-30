@@ -50,6 +50,9 @@ override CFILES := $(shell find ./ -type f -name '*.c')
 override OBJ := $(CFILES:.c=.o)
 override HEADER_DEPS := $(CFILES:.c=.d)
 
+override ASMFILES := $(shell find ./ -type f -name '*.S')
+override OBJ += $(ASMFILES:.S=.o)
+
 # Default target.
 .PHONY: all
 all: $(KERNEL)
@@ -59,7 +62,7 @@ stivale2.h:
 
 # Link rules for the final kernel executable.
 $(KERNEL): $(OBJ)
-	$(LD) $(OBJ) $(LDFLAGS) $(INTERNALLDFLAGS) -o $@
+	$(LD) $(OBJ) $(ASM_OBJ) $(LDFLAGS) $(INTERNALLDFLAGS) -o $@
 
 # Compilation rules for *.c files.
 -include $(HEADER_DEPS)
