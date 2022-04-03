@@ -98,6 +98,7 @@ void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
     }
 }
 
+void (*term_write)(const char *string, size_t length);
 // The following will be our kernel's entry point.
 void _start(struct stivale2_struct *stivale2_struct) {
     // Let's get the terminal structure tag from the bootloader.
@@ -114,19 +115,22 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
     // Let's get the address of the terminal write function.
     void *term_write_ptr = (void *)term_str_tag->term_write;
-
+    
     // Now, let's assign this pointer to a function pointer which
     // matches the prototype described in the stivale2 specification for
     // the stivale2_term_write function.
-    void (*term_write)(const char *string, size_t length) = term_write_ptr;
+    term_write = term_write_ptr;
 
     // We should now be able to call the above function pointer to print out
     // a simple "Hello World" to screen.
-    term_write("hello", 5);
-    term_write("hello", 5);
+    term_write("Hello World", 11);
     initIdt();
     asm volatile ("int $0x04");
+    asm volatile ("int $0x05");
+    asm volatile ("int $0x06");
+    asm volatile ("int $0x07");
+    asm volatile ("cli");
     for (;;) {
-	asm("hlt");
+	asm ("hlt");
     }
 }

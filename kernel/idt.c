@@ -19,7 +19,7 @@ void setIdtEntry(idt64_entry_t *target, uint64_t offset, uint16_t selector, uint
 }
 void initIdt() {
 	for (uint8_t i = 0; i < 32; i++) {
-		setIdtEntry(&idt_entries[i], *((uint64_t*)isr_stub_table[i]), 0x28, 0, 0x8E);
+		setIdtEntry(&idt_entries[i], (uint64_t)isr_stub_table[i], 0x28, 0, 0x8E);
 	}
 	asm volatile("lidt %0" : : "m"(idt_ptr));
 	asm volatile("sti");
