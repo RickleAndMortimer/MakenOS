@@ -125,8 +125,9 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // a simple "Hello World" to screen.
     term_write("Hello World", 11);
     initIdt();
-    asm volatile ("int $0x04");
-    asm volatile ("cli");
+    asm volatile ("int $0xA"); 
+    asm volatile ("int $0xA"); 
+    asm volatile ("int $0xA"); 
     for (;;) {
 	asm ("hlt");
     }

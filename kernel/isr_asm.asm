@@ -25,19 +25,20 @@ isr_common_stub:
     call exception_handler
     popad
     iretq
+
 %macro isr_err_stub 1
 isr_stub_%+%1:
     pushad
-    mov rdi, 1
-    mov rsi, 2
+    pop rdi
+    mov rsi, %1
     jmp isr_common_stub
 %endmacro
 
 %macro isr_no_err_stub 1
 isr_stub_%+%1:
     pushad
-    mov rdi, 1
-    mov rsi, 2
+    mov rdi, 0
+    mov rsi, %1
     jmp isr_common_stub
 %endmacro
 
