@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <isr.h>
+#include <cpuid.h>
 #include <stdint.h>
 
 size_t strlen(char* s) {
@@ -49,10 +50,10 @@ void printNumber(uint64_t num, char* x) {
 	term_write("\n", 1);
 }
 
-void exception_handler(uint64_t int_no, uint64_t err_code){ 
+void exception_handler(uint64_t err_code, uint64_t int_no){ 
 	char* x;
 	term_write("\n",1);
-	printNumber(int_no, x);
 	printNumber(err_code, x);
+	printNumber(int_no, x);
 	asm volatile("cli; hlt");
 }

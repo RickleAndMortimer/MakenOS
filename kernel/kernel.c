@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stivale2.h>
 #include <idt.h>
+#include <apic.h>
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an array in .bss.
@@ -112,7 +113,6 @@ void _start(struct stivale2_struct *stivale2_struct) {
             asm ("hlt");
         }
     }
-
     // Let's get the address of the terminal write function.
     void *term_write_ptr = (void *)term_str_tag->term_write;
     
@@ -125,9 +125,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // a simple "Hello World" to screen.
     term_write("Hello World", 11);
     initIdt();
-    asm volatile ("int $0xA"); 
-    asm volatile ("int $0xA"); 
-    asm volatile ("int $0xA"); 
+    enableAPIC();
+    asm volatile ("int $0xF"); 
     for (;;) {
 	asm ("hlt");
     }
