@@ -126,7 +126,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("Hello World", 11);
     initIdt();
     enableAPIC();
-    asm volatile ("int $0xF"); 
+    asm volatile ("int $0xA"); 
     for (;;) {
 	asm ("hlt");
     }

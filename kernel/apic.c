@@ -5,6 +5,7 @@
 #define IA32_APIC_BASE_MSR 0x1B
 #define IA32_APIC_BASE_MSR_BSP 0x100 // Processor is a BSP
 #define IA32_APIC_BASE_MSR_ENABLE 0x800
+#define APIC_EOI_REGISTER 0xB0
 
 enum {
     CPUID_FEAT_ECX_SSE3         = 1 << 0, 
@@ -150,4 +151,19 @@ void enableAPIC(void) {
  
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
     writeAPICRegister(0xF0, readAPICRegister(0xF0) | 0x100);
+}
+
+//IOAPIC
+uint32_t cpuReadIOAPIC(void *ioapicaddr, uint32_t reg)
+{
+   uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
+   ioapic[0] = (reg & 0xFF);
+   return ioapic[4];
+}
+ 
+void cpuWriteIOAPIC(void *ioapicaddr, uint32_t reg, uint32_t value)
+{
+   uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
+   ioapic[0] = (reg & 0xFF);
+   ioapic[4] = value;
 }

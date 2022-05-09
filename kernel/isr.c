@@ -50,10 +50,18 @@ void printNumber(uint64_t num, char* x) {
 	term_write("\n", 1);
 }
 
-void exception_handler(uint64_t err_code, uint64_t int_no){ 
+void exception_handler(uint64_t int_no, uint64_t err_code, interrupt_frame_t* stack) {
 	char* x;
 	term_write("\n",1);
-	printNumber(err_code, x);
 	printNumber(int_no, x);
-	asm volatile("cli; hlt");
+	printNumber(err_code, x);
+	printNumber(&stack->r8, x);
+	printNumber(&stack->r9, x);
+	printNumber(&stack->r10, x);
+	printNumber(&stack->r11, x);
+	printNumber(&stack->r12, x);
+	printNumber(&stack->r13, x);
+	printNumber(&stack->r14, x);
+	printNumber(&stack->r15, x);
+	asm volatile ("cli; hlt");
 }
