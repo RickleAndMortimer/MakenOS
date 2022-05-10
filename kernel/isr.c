@@ -3,6 +3,8 @@
 #include <cpuid.h>
 #include <stdint.h>
 
+isr_t interrupt_handlers[256];
+
 size_t strlen(char* s) {
     size_t len = 0;
     while(s[len] != '\0') {len++;};
@@ -55,13 +57,37 @@ void exception_handler(uint64_t int_no, uint64_t err_code, interrupt_frame_t* st
 	term_write("\n",1);
 	printNumber(int_no, x);
 	printNumber(err_code, x);
-	printNumber(&stack->r8, x);
-	printNumber(&stack->r9, x);
-	printNumber(&stack->r10, x);
-	printNumber(&stack->r11, x);
-	printNumber(&stack->r12, x);
-	printNumber(&stack->r13, x);
-	printNumber(&stack->r14, x);
-	printNumber(&stack->r15, x);
-	asm volatile ("cli; hlt");
+	asm volatile ("cli");
+	//printNumber(stack.r8, x);
+	//printNumber(stack.r9, x);
+	//printNumber(stack.r10, x);
+	//printNumber(stack.r11, x);
+	//printNumber(stack.r12, x);
+	//printNumber(stack.r13, x);
+	//printNumber(stack.r14, x);
+	//printNumber(stack.r15, x);
+}
+
+void register_interrupt_handler(uint8_t irq, isr_t handler)
+{
+	interrupt_handlers[irq] = handler;
+}
+
+void irq_handler(uint64_t int_no)
+{
+   // Send an EOI (end of interrupt) signal to the PICs.
+   // If this interrupt involved the slave.
+   if (int_no >= 40)
+   {
+       // Send reset signal to slave.
+       outb(0xA0, 0x20);
+   }
+   // Send reset signal to master. (As well as slave, if necessary).
+   outb(0x20, 0x20);
+
+   if (interrupt_handlers[int_no] != 0)
+   {
+       isr_t handler = interrupt_handlers[int_no];
+       handler(int_no);
+   }
 }

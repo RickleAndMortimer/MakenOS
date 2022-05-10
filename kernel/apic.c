@@ -152,6 +152,10 @@ void enableAPIC(void) {
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
     writeAPICRegister(0xF0, readAPICRegister(0xF0) | 0x100);
 }
+void enableAPICTimer(void) {
+    writeAPICRegister(0x3E0, 0x3);
+    writeAPICRegister(0x380, 0xFFFFFFFF);
+}
 
 //IOAPIC
 uint32_t cpuReadIOAPIC(void *ioapicaddr, uint32_t reg)

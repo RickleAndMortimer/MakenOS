@@ -3,6 +3,7 @@
 #include <stivale2.h>
 #include <idt.h>
 #include <apic.h>
+#include <pic.h>
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an array in .bss.
@@ -125,8 +126,9 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // a simple "Hello World" to screen.
     term_write("Hello World", 11);
     initIdt();
-    enableAPIC();
-    asm volatile ("int $0xA"); 
+    asm volatile("sti");
+    initTimer(50);
+
     for (;;) {
 	asm ("hlt");
     }
