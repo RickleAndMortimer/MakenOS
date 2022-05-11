@@ -5,20 +5,18 @@
 
 uint32_t tick = 0;
 
-extern interrupt_handlers[];
+extern isr_t interrupt_handlers[];
 
-static void timer_callback()
+static void timer_callback(interrupt_frame_t frame)
 {
-	char *x;
 	tick++;
-	term_write("Tick: ", 7);
-	printNumber(itoa(tick), x);
-	term_write("\n", 2);
+	term_write("\nTick: ", 7);
 }
 
 void initTimer(uint32_t frequency)
 {
    // Firstly, register our timer callback.
+   term_write("Initializing timer\n", 19);
    register_interrupt_handler(32, &timer_callback);
 
    // The value we send to the PIT is the value to divide it's input clock
@@ -36,4 +34,5 @@ void initTimer(uint32_t frequency)
    // Send the frequency divisor.
    outb(0x40, l);
    outb(0x40, h);
+   term_write("Timer initialized\n", 18);
 }

@@ -52,20 +52,19 @@ void printNumber(uint64_t num, char* x) {
 	term_write("\n", 1);
 }
 
-void exception_handler(uint64_t int_no, uint64_t err_code, interrupt_frame_t* stack) {
+void exception_handler(interrupt_frame_t stack) {
 	char* x;
 	term_write("\n",1);
-	printNumber(int_no, x);
-	printNumber(err_code, x);
-	asm volatile ("cli");
-	//printNumber(stack.r8, x);
-	//printNumber(stack.r9, x);
-	//printNumber(stack.r10, x);
-	//printNumber(stack.r11, x);
-	//printNumber(stack.r12, x);
-	//printNumber(stack.r13, x);
-	//printNumber(stack.r14, x);
-	//printNumber(stack.r15, x);
+	printNumber(stack.int_no, x);
+	printNumber(stack.err_code, x);
+	printNumber(stack.r8, x);
+	printNumber(stack.r9, x);
+	printNumber(stack.r10, x);
+	printNumber(stack.r11, x);
+	printNumber(stack.r12, x);
+	printNumber(stack.r13, x);
+	printNumber(stack.r14, x);
+	printNumber(stack.r15, x);
 }
 
 void register_interrupt_handler(uint8_t irq, isr_t handler)
@@ -73,11 +72,12 @@ void register_interrupt_handler(uint8_t irq, isr_t handler)
 	interrupt_handlers[irq] = handler;
 }
 
-void irq_handler(uint64_t int_no)
+void irq_handler(interrupt_frame_t frame)
 {
    // Send an EOI (end of interrupt) signal to the PICs.
    // If this interrupt involved the slave.
-   if (int_no >= 40)
+   term_write("handling interrupt", 20);
+   if (frame.int_no >= 40)
    {
        // Send reset signal to slave.
        outb(0xA0, 0x20);
@@ -85,9 +85,9 @@ void irq_handler(uint64_t int_no)
    // Send reset signal to master. (As well as slave, if necessary).
    outb(0x20, 0x20);
 
-   if (interrupt_handlers[int_no] != 0)
+   if (interrupt_handlers[frame.int_no] != 0)
    {
-       isr_t handler = interrupt_handlers[int_no];
-       handler(int_no);
+       isr_t handler = interrupt_handlers[frame.int_no];
+       handler(frame);
    }
 }

@@ -5,7 +5,7 @@
 
 extern void* isr_stub_table[];
 extern void* irq_stub_table[];
-extern isr_t interrupt_handlers[];
+
 idt64_entry_t idt_entries[256];
 
 idt64_ptr_t idt_ptr = (idt64_ptr_t) {
