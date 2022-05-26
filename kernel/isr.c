@@ -37,6 +37,7 @@ void itoa(int value, char* str, int base) {
     str[i] = '\0';
     reverse(str);
 }
+
 void uint64toa(uint64_t value, char* str, int base) {
     int i = 0;
     do {
@@ -76,7 +77,6 @@ void exception_handler(interrupt_frame_t* stack) {
     printNumber(stack->rflags, x);
     printNumber(stack->cs, x);
     printNumber(stack->rip, x);
-    asm volatile ("cli; hlt");
 }
 
 void register_interrupt_handler(uint8_t irq, isr_t handler)

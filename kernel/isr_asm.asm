@@ -40,7 +40,7 @@ extern irq_handler
 isr_common_stub:
     pushad
     cld
-    lea rdi, [rsp + 120]
+    lea rdi, [rsp]
     call exception_handler
     popad
     add rsp, 0x10
@@ -100,7 +100,7 @@ irq_common_stub:
 	cld
         call irq_handler
         popad
-    	add rsp, 16
+    	add rsp, 0x10
         iretq
 
 %macro irq_stub 2
