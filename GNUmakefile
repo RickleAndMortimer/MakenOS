@@ -7,6 +7,7 @@ all-hdd: barebones.hdd
 .PHONY: debug
 debug: barebones.iso
 	objcopy --only-keep-debug kernel/kernel.elf kernel.sym
+	objcopy --strip-debug kernel/kernel.elf
 	qemu-system-x86_64 -s -S -M q35 -m 2G -cdrom barebones.iso -boot d 
 
 .PHONY: run
@@ -71,7 +72,7 @@ barebones.hdd: limine kernel
 
 .PHONY: clean
 clean:
-	rm -f iso_root barebones.iso barebones.hdd
+	rm -f iso_root barebones.iso barebones.hdd kernel.sym
 	$(MAKE) -C kernel clean
 
 .PHONY: distclean

@@ -30,51 +30,22 @@ extern invalid_opcode_handler
 isr_common_stub:
     pushad
     cld 
-    ; lea rdi, [rsp]
+    lea rdi, [rsp]
     call exception_handler
     popad
     add rsp, 0x10 
     iretq
 
-;isr_stub_14:
- ;   cli
-  ;  push 1
-   ; push 14
-    ;pushad
-;    cld
-   ; call page_fault_handler
- ;   popad
-   ; add rsp, 0x10
-  ;  iretq
-
-;isr_stub_6:
-;   cli
-;   push 0
-;   push 6
-;   pushad
-;   cld
-;   call invalid_opcode_handler
-;    popad
-;    add rsp, 0x10
-;    iretq
-
 %macro isr_err_stub 1
 isr_stub_%+%1:
-    cli
-    push 1
     push %1
-    mov rsi, 1
-    mov rdi, %1
     jmp isr_common_stub
 %endmacro
 
 %macro isr_no_err_stub 1
 isr_stub_%+%1:
-    cli
     push 0
     push %1
-    mov rsi, 0
-    mov rdi, %1
     jmp isr_common_stub
 %endmacro
 
@@ -112,16 +83,16 @@ isr_err_stub    30
 isr_no_err_stub 31
 
 irq_common_stub:
-	pushad
-	cld
-        call irq_handler
-        popad
-    	add rsp, 0x10
-        iretq
+    pushad
+    cld
+    lea rdi, [rsp]
+    call irq_handler
+    popad
+    add rsp, 0x10
+    iretq
 
 %macro irq_stub 2
 irq_stub_%+%1:
-    cli
     push 0
     push %2
     jmp irq_common_stub
@@ -148,14 +119,14 @@ global isr_stub_table
 isr_stub_table:
 %assign i 0 
 %rep    32 
-	DQ isr_stub_%+i 
-	%assign i i+1 
+    DQ isr_stub_%+i 
+    %assign i i+1 
 %endrep
 
 global irq_stub_table
 irq_stub_table:
 %assign i 0
 %rep 	16
-	DQ irq_stub_%+i
-	%assign i i+1
+    DQ irq_stub_%+i
+    %assign i i+1
 %endrep

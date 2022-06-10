@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stivale2.h>
+#include <pit.h>
 #include <idt.h>
 
 // We need to tell the stivale bootloader where we want our stack to be.
@@ -122,12 +123,10 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
     // We should now be able to call the above function pointer to print out
     // a simple "Hello World" to screen.
-    term_write("Hello World", 11);
+    term_write("Hello World\n", 13);
+    initTimer(1);
     initIdt();
-    asm volatile ("int $0x4");
-    asm volatile("cli");
-    asm volatile ("int $0x5");
-    asm volatile("cli");
-    asm volatile ("int $0x7");
-    asm volatile("cli");
+    for (;;) {
+	asm volatile ("hlt");
+    }
 }

@@ -23,13 +23,13 @@ void setIdtEntry(idt64_entry_t *target, uint64_t offset, uint16_t selector, uint
 	target->zero = 0;
 }
 void initIdt() {
-    	//remapPIC(0x20, 0x28);
 	for (uint8_t i = 0; i < 32; i++) {
 		setIdtEntry(&idt_entries[i], (uint64_t)isr_stub_table[i], 0x28, 0, 0x8F);
 	}
-	//for (uint8_t i = 0; i < 16; i++) {
-	//	setIdtEntry(&idt_entries[i+32], (uint64_t)irq_stub_table[i], 0x28, 0, 0x8F);
-	//}
+	for (uint8_t i = 0; i < 16; i++) {
+		setIdtEntry(&idt_entries[i+32], (uint64_t)irq_stub_table[i], 0x28, 0, 0x8F);
+	}
+    	remapPIC(0x20, 0x28);
 	asm volatile("lidt %0" : : "m"(idt_ptr));
 	asm volatile("sti");
 }
