@@ -125,9 +125,9 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("Hello World", 11);
     initIdt();
     asm volatile ("int $0x4");
-    asm volatile ("hlt");
+    asm volatile("cli");
     asm volatile ("int $0x5");
-    asm volatile ("hlt");
+    asm volatile("cli");
     asm volatile ("int $0x7");
-    asm volatile ("hlt");
+    asm volatile("cli");
 }

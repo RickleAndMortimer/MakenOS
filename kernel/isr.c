@@ -53,30 +53,11 @@ void printNumber(uint64_t num, char* x) {
     term_write("\n", 1);
 }
 
-void exception_handler(interrupt_frame_t* stack) {
-    char* x;
+void exception_handler(uint64_t int_no, uint64_t err_code) {
+    char x[20];
     term_write("\n",1);
-    printNumber(stack->int_no, x);
-    printNumber(stack->err_code, x);
-    printNumber(stack->r15, x);
-    printNumber(stack->r14, x);
-    printNumber(stack->r13, x);
-    printNumber(stack->r12, x);
-    printNumber(stack->r11, x);
-    printNumber(stack->r10, x);
-    printNumber(stack->r9, x);
-    printNumber(stack->r8, x);
-    printNumber(stack->rsp, x);
-    printNumber(stack->rsi, x);
-    printNumber(stack->rdi, x);
-    printNumber(stack->rbp, x);
-    printNumber(stack->rax, x);
-    printNumber(stack->rbx, x);
-    printNumber(stack->rcx, x);
-    printNumber(stack->rdx, x);
-    printNumber(stack->rflags, x);
-    printNumber(stack->cs, x);
-    printNumber(stack->rip, x);
+    printNumber(int_no, x);
+    printNumber(err_code, x);
 }
 
 void register_interrupt_handler(uint8_t irq, isr_t handler)

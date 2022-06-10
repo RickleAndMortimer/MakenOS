@@ -1,56 +1,70 @@
 extern exception_handler
 extern irq_handler
+extern page_fault_handler
+extern invalid_opcode_handler
 
 %macro pushad 0
     push rax      
-    push rbx
     push rcx
     push rdx
-    push rbp
     push rdi
     push rsi
     push r8
     push r9
     push r10
     push r11
-    push r12
-    push r13
-    push r14
-    push r15
 %endmacro
 
 %macro popad 0
-    pop r15
-    pop r14
-    pop r13
-    pop r12
     pop r11
     pop r10
     pop r9
     pop r8
     pop rsi
     pop rdi
-    pop rbp
     pop rdx      
     pop rcx
-    pop rbx      
     pop rax
 %endmacro
 
 isr_common_stub:
     pushad
-    cld
-    lea rdi, [rsp]
+    cld 
+    ; lea rdi, [rsp]
     call exception_handler
     popad
-    add rsp, 0x10
+    add rsp, 0x10 
     iretq
+
+;isr_stub_14:
+ ;   cli
+  ;  push 1
+   ; push 14
+    ;pushad
+;    cld
+   ; call page_fault_handler
+ ;   popad
+   ; add rsp, 0x10
+  ;  iretq
+
+;isr_stub_6:
+;   cli
+;   push 0
+;   push 6
+;   pushad
+;   cld
+;   call invalid_opcode_handler
+;    popad
+;    add rsp, 0x10
+;    iretq
 
 %macro isr_err_stub 1
 isr_stub_%+%1:
     cli
     push 1
     push %1
+    mov rsi, 1
+    mov rdi, %1
     jmp isr_common_stub
 %endmacro
 
@@ -59,6 +73,8 @@ isr_stub_%+%1:
     cli
     push 0
     push %1
+    mov rsi, 0
+    mov rdi, %1
     jmp isr_common_stub
 %endmacro
 

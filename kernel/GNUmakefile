@@ -19,7 +19,7 @@ endif
 CFLAGS ?= -O2 -g -Wall -Wextra -pipe 
 
 # User controllable linker flags. We set none by default.
-LDFLAGS ?= -g
+LDFLAGS ?=
 
 # Internal C flags that should not be changed by the user.
 override INTERNALCFLAGS :=   \
@@ -65,11 +65,17 @@ stivale2.h:
 -include $(HEADER_DEPS)
 
 %.o: %.c stivale2.h
-	$(CC) $(CFLAGS) $(INTERNALCFLAGS) -c $< -o $@
+	$(CC) -g $(CFLAGS) $(INTERNALCFLAGS) -c $< -o $@
 
 # Link rules for the final kernel executable.
 $(KERNEL): $(OBJ) 
 	$(LD) $(OBJ) $(LDFLAGS) $(INTERNALLDFLAGS) -o $@ 
+
+.PHONY: debug
+debug: $(KERNEL)
+
+%.o: %.c stivale2.h
+	$(CC) $(CFLAGS) -g $(INTERNALCFLAGS) -c $< -o $@
 
 # Remove object files and the final executable.
 .PHONY: clean
