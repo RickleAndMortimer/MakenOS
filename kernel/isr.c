@@ -1,7 +1,8 @@
 #include <kernel.h>
 #include <isr.h>
+#include <pit.h>
+#include <pic.h>
 #include <idt.h>
-#include <cpuid.h>
 #include <stdint.h>
 
 isr_t interrupt_handlers[256];
@@ -56,7 +57,6 @@ void printNumber(uint64_t num, char* x) {
 
 void exception_handler(interrupt_frame_t* frame) {
     char x[20];
-    term_write("interrupt!\n",12);
     printNumber(frame->int_no, x);
     printNumber(frame->err_code, x);
     asm volatile ("hlt");
@@ -64,25 +64,17 @@ void exception_handler(interrupt_frame_t* frame) {
 
 void register_interrupt_handler(uint8_t interrupt, isr_t handler)
 {
-   interrupt_handlers[interrupt] = handler;
+    interrupt_handlers[interrupt] = handler;
 }
 
 void irq_handler(interrupt_frame_t* frame)
 {
-   // Send an EOI (end of interrupt) signal to the PICs->
-   // If this interrupt involved the slave->
-   term_write("IRQ Detected\n", 14);
-   if (frame->int_no >= 40)
-   {
-       // Send reset signal to slave->
-       outb(0xA0, 0x20);
-   }
-   // Send reset signal to master-> (As well as slave, if necessary)->
-   outb(0x20, 0x20);
+    // Send an EOI (end of interrupt) signal to the PICs->
+    // If this interrupt involved the slave->
+    sendEOIPIC(frame->int_no);
 
-   if (&interrupt_handlers[frame->int_no] != NULL)
-   {
-       interrupt_handlers[frame->int_no](frame);
-   }
-
+    if (&interrupt_handlers[frame->int_no] != NULL)
+    {
+        interrupt_handlers[frame->int_no](frame);
+    }
 }

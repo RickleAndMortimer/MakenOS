@@ -1,19 +1,22 @@
 #include <pit.h>
-#include <pic.h>
+#include "pic.h"
 #include <isr.h>
 #include <kernel.h>
 #include <idt.h>
 
 uint32_t tick = 0;
 
-extern isr_t interrupt_heandlers[];
+extern isr_t interrupt_handlers[];
 
 static isr_t timer_callback(interrupt_frame_t* frame)
 {
-    if (tick++ < 7) 
-    	term_write("Tick: \n", 7);
-    else
+    if (tick < 8) {
+	tick++;
+	term_write("Tick: \n", 7);
+    }
+    else {
 	setMaskIRQ(0);
+    }
 }
 
 void initTimer(uint32_t frequency)
@@ -28,15 +31,15 @@ void initTimer(uint32_t frequency)
     uint32_t divisor = 1193180 / frequency;
 
     // Send the command byte.
-    outb(0x43, 0x36);
+    my_outb(0x43, 0x36);
 
     // Divisor has to be sent byte-wise, so split here into upper/lower bytes.
     uint8_t l = (uint8_t)(divisor & 0xFF);
     uint8_t h = (uint8_t)( (divisor>>8) & 0xFF );
 
     // Send the frequency divisor.
-    outb(0x40, l);
-    outb(0x40, h);
+    my_outb(0x40, l);
+    my_outb(0x40, h);
     term_write("Timer initialized\n", 18);
     clearMaskIRQ(0);
 }

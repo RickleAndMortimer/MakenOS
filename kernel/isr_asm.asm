@@ -93,6 +93,7 @@ irq_common_stub:
 
 %macro irq_stub 2
 irq_stub_%+%1:
+    cli
     push 0
     push %2
     jmp irq_common_stub

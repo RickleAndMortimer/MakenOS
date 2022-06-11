@@ -124,8 +124,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // We should now be able to call the above function pointer to print out
     // a simple "Hello World" to screen.
     term_write("Hello World\n", 13);
-    initTimer(1);
     initIdt();
+    initTimer(125000);
     for (;;) {
 	asm volatile ("hlt");
     }

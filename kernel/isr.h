@@ -7,7 +7,7 @@ typedef struct {
     uint64_t rsp, rflags, cs, rip;
 }__attribute__((packed)) interrupt_frame_t;
 
-typedef void (*isr_t) (interrupt_frame_t* stack);
+typedef void (*isr_t) (interrupt_frame_t* frame);
 
 __attribute__((noreturn))
 void exception_handler(interrupt_frame_t* frame);
