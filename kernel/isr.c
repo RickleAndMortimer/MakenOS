@@ -1,6 +1,8 @@
 #include <kernel.h>
 #include <isr.h>
-#include <cpuid.h>
+#include <pit.h>
+#include <pic.h>
+#include <idt.h>
 #include <stdint.h>
 
 isr_t interrupt_handlers[256];
@@ -37,6 +39,7 @@ void itoa(int value, char* str, int base) {
     str[i] = '\0';
     reverse(str);
 }
+
 void uint64toa(uint64_t value, char* str, int base) {
     int i = 0;
     do {
@@ -47,47 +50,31 @@ void uint64toa(uint64_t value, char* str, int base) {
 }
 
 void printNumber(uint64_t num, char* x) {
-	uint64toa(num, x, 10);
-	term_write(x, strlen(x));
-	term_write("\n", 1);
+    uint64toa(num, x, 10);
+    term_write(x, strlen(x));
+    term_write("\n", 1);
 }
 
-void exception_handler(uint64_t int_no, uint64_t err_code, interrupt_frame_t* stack) {
-	char* x;
-	term_write("\n",1);
-	printNumber(int_no, x);
-	printNumber(err_code, x);
-	asm volatile ("cli");
-	//printNumber(stack.r8, x);
-	//printNumber(stack.r9, x);
-	//printNumber(stack.r10, x);
-	//printNumber(stack.r11, x);
-	//printNumber(stack.r12, x);
-	//printNumber(stack.r13, x);
-	//printNumber(stack.r14, x);
-	//printNumber(stack.r15, x);
+void exception_handler(interrupt_frame_t* frame) {
+    char x[20];
+    printNumber(frame->int_no, x);
+    printNumber(frame->err_code, x);
+    asm volatile ("hlt");
 }
 
-void register_interrupt_handler(uint8_t irq, isr_t handler)
+void register_interrupt_handler(uint8_t interrupt, isr_t handler)
 {
-	interrupt_handlers[irq] = handler;
+    interrupt_handlers[interrupt] = handler;
 }
 
-void irq_handler(uint64_t int_no)
+void irq_handler(interrupt_frame_t* frame)
 {
-   // Send an EOI (end of interrupt) signal to the PICs.
-   // If this interrupt involved the slave.
-   if (int_no >= 40)
-   {
-       // Send reset signal to slave.
-       outb(0xA0, 0x20);
-   }
-   // Send reset signal to master. (As well as slave, if necessary).
-   outb(0x20, 0x20);
+    // Send an EOI (end of interrupt) signal to the PICs->
+    // If this interrupt involved the slave->
+    sendEOIPIC(frame->int_no);
 
-   if (interrupt_handlers[int_no] != 0)
-   {
-       isr_t handler = interrupt_handlers[int_no];
-       handler(int_no);
-   }
+    if (&interrupt_handlers[frame->int_no] != NULL)
+    {
+        interrupt_handlers[frame->int_no](frame);
+    }
 }
