@@ -36,11 +36,6 @@ uint8_t my_inb(uint16_t port)
     return ret;
 }
 
-void my_io_wait(void)
-{
-    my_outb(0x80, 0);
-}
-
 void my_outb(uint16_t port, uint8_t val)
 {
     asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
@@ -48,6 +43,12 @@ void my_outb(uint16_t port, uint8_t val)
      * Wider immediate constants would be truncated at assemble-time (e.g. "i" constraint).
      * The  outb  %al, %dx  encoding is the only option for all other cases.
      * %1 expands to %dx because  port  is a uint16_t.  %w1 could be used if we had the port number a wider C type */
+}
+
+
+void my_io_wait(void)
+{
+    my_outb(0x80, 0);
 }
 
 /* Helper func */

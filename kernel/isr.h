@@ -15,10 +15,4 @@ void exception_handler(interrupt_frame_t* frame);
 __attribute__((noreturn))
 void irq_handler(interrupt_frame_t* stack); 
 
-__attribute__((noreturn))
-void page_fault_handler(void); 
-
-__attribute__((noreturn))
-void invalid_opcode_handler(void); 
-
 void register_interrupt_handler(uint8_t irq, isr_t handler);
