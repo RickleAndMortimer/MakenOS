@@ -7,5 +7,5 @@ void clearMaskIRQ(unsigned char IRQline);
 
 void remapPIC(int offset1, int offset2);
 
-void outb(uint16_t, uint8_t);
-uint8_t inb(uint16_t port);
+void my_outb(uint16_t, uint8_t);
+uint8_t my_inb(uint16_t port);

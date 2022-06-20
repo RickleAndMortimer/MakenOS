@@ -1,8 +1,6 @@
 #include <kernel.h>
 #include <isr.h>
-#include <pit.h>
 #include <pic.h>
-#include <idt.h>
 #include <stdint.h>
 
 isr_t interrupt_handlers[256];
@@ -59,7 +57,6 @@ void exception_handler(interrupt_frame_t* frame) {
     char x[20];
     printNumber(frame->int_no, x);
     printNumber(frame->err_code, x);
-    asm volatile ("hlt");
 }
 
 void register_interrupt_handler(uint8_t interrupt, isr_t handler)

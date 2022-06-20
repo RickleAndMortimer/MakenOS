@@ -9,10 +9,6 @@ typedef struct {
 
 typedef void (*isr_t) (interrupt_frame_t* frame);
 
-__attribute__((noreturn))
 void exception_handler(interrupt_frame_t* frame);
-
-__attribute__((noreturn))
-void irq_handler(interrupt_frame_t* stack); 
-
+void irq_handler(interrupt_frame_t* frame); 
 void register_interrupt_handler(uint8_t irq, isr_t handler);

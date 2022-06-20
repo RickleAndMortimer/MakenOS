@@ -1,8 +1,7 @@
 #include <pit.h>
-#include "pic.h"
+#include <pic.h>
 #include <isr.h>
 #include <kernel.h>
-#include <idt.h>
 
 uint32_t tick = 0;
 
@@ -10,13 +9,10 @@ extern isr_t interrupt_handlers[];
 
 static isr_t timer_callback(interrupt_frame_t* frame)
 {
-    if (tick < 8) {
-	tick++;
-	term_write("Tick: \n", 7);
-    }
-    else {
-	setMaskIRQ(0);
-    }
+    char x[20];
+    tick++;
+    term_write("Tick: \n", 7);
+    printNumber(tick, x);
 }
 
 void initTimer(uint32_t frequency)
