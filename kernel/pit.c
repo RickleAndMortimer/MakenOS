@@ -38,3 +38,8 @@ void initTimer(uint32_t frequency)
     term_write("Timer initialized\n", 18);
     clearMaskIRQ(0);
 }
+
+void sleep() {
+
+
+}

@@ -1,17 +1,9 @@
-#include <pic.h>
 #include <stdint.h>
+#include <pic.h>
 
-#define PS2_DATA_PORT 0x80 // Read/Write
+#define PS2_DATA_PORT 0x60 // Read/Write
 #define PS2_STATUS_REG 0x64 // Read
 #define PS2_COMMAND_REG 0x64 // Write
-
-uint8_t readDataPort() {
-    return my_inb(PS2_DATA_PORT);
-}
-
-void writeDataPort(uint8_t byte) {
-    my_outb(PS2_DATA_PORT, byte);
-}
 
 /*
     Status Register 
@@ -40,10 +32,30 @@ uint8_t readStatusRegister() {
     return my_inb(PS2_STATUS_REG);
 }
 
+void pollOutputBuffer() {
+    // TODO: replace with timer
+    while (~(readStatusRegister() & 1)) {}
+};
+
+void pollInputBuffer() {
+    //TOOD: handle with timer
+    while (readStatusRegister() & 2) {}
+};
+
+uint8_t readDataPort() {
+    pollOutputBuffer();
+    return my_inb(PS2_DATA_PORT);
+}
+
+void writeDataPort(uint8_t byte) {
+    pollInputBuffer();
+    my_outb(PS2_DATA_PORT, byte);
+}
+
 void writeCommandRegister(uint8_t command_byte, uint8_t next_byte) {
     my_outb(PS2_COMMAND_REG, command_byte);
     if (next_byte) {
-	while (readStatusRegister() & 1) {}
+	pollInputBuffer();
 	writeDataPort(next_byte);
     }
 }
@@ -54,19 +66,33 @@ uint8_t testPS2Controller() {
     return readDataPort();
 }
 
-uint8_t testPS2Port(uint8_t port) {
+uint8_t testPS2Port1() {
     // test first port
-    writeCommandRegister(0xAB - 2*(port-1), 0);
+    writeCommandRegister(0xAB, 0);
     return readDataPort();
 }
 
-void enablePS2Port(uint8_t port) {
-    writeCommandRegister(0xAE - 7*(port-1), 0);
+uint8_t testPS2Port2() {
+    // test first port
+    writeCommandRegister(0xA9, 0);
+    return readDataPort();
 }
 
-void disablePS2Port(uint8_t port) {
+void enablePS2Port1() {
+    writeCommandRegister(0xAE, 0);
+}
+
+void disablePS2Port1() {
+    writeCommandRegister(0xAD, 0);
+}
+
+void enablePS2Port2() {
+    writeCommandRegister(0xA8, 0);
+}
+
+void disablePS2Port2() {
     // port 1 disable
-    writeCommandRegister(0xAD - 7*(port-1), 0);
+    writeCommandRegister(0xA7, 0);
 }
 
 /*
@@ -129,6 +155,8 @@ uint8_t readControllerOutputBuffer() {
 }
 
 void writeOutputBuffer(uint8_t byte, uint8_t port) {
+    // sleep until status register is clear
+    pollInputBuffer();
     writeCommandRegister(0xD1 + port, byte);
 }
 
@@ -144,8 +172,8 @@ void initKeyboard() {
     // TODO: Check ACPI for PS/2 Controller
 
     // Disable devices
-    disablePS2Port(1);
-    disablePS2Port(2);
+    disablePS2Port1();
+    disablePS2Port2();
 
     // Flush the output buffer
     readControllerOutputBuffer();
@@ -155,7 +183,7 @@ void initKeyboard() {
     uint8_t configuration_byte = readPS2RAM(0);
     uint8_t two_channel = ~(configuration_byte & 0b00010000);
     if (two_channel) {
-    	disablePS2Port(2);
+    	disablePS2Port2();
     }
     configuration_byte &= 0b11011100;
     writeConfigurationByte(configuration_byte);
@@ -165,21 +193,21 @@ void initKeyboard() {
 
     // Determine if there are two channels
     if (two_channel) {
-	enablePS2Port(2);
+	enablePS2Port2();
 	configuration_byte = readPS2RAM(0);
 	if (configuration_byte & 0b00010000) {
 	    two_channel = 0; 
 	}
 	else {
-	    disablePS2Port(2);
+	    disablePS2Port2();
 	}
     }
 
     // Perform Inteface tests and enable devices
-    uint8_t port1_status = testPS2Port(1);
+    uint8_t port1_status = testPS2Port1();
     switch (port1_status) {
 	case 0x00:
-	    enablePS2Port(1);
+	    enablePS2Port1();
 	    configuration_byte = readPS2RAM(0);
 	    writeConfigurationByte(configuration_byte | 1);
 	    break;
@@ -198,10 +226,10 @@ void initKeyboard() {
     }
 
     if (two_channel) {
-    	uint8_t port2_status = testPS2Port(2);
+    	uint8_t port2_status = testPS2Port2();
 	switch (port2_status) {
 	    case 0x00:
-	        enablePS2Port(2);
+	        enablePS2Port2();
 	    	configuration_byte = readPS2RAM(0);
 	    	writeConfigurationByte(configuration_byte | 2);
 	        break;
@@ -220,7 +248,12 @@ void initKeyboard() {
 	}
     }
     // Reset Devices
-   
+    writeOutputBuffer(0xFF, 0);
+    writeOutputBuffer(0xFF, 1);
+    if (two_channel) {
+	writeOutputBuffer(0xFF, 2);
+    }
+
     clearMaskIRQ(1);
 }
 
