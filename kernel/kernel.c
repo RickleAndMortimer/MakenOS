@@ -127,7 +127,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     initIdt();
     asm ("int $0x04");
     asm ("int $0x10");
-    initTimer(5000);
+    initTimer(25000);
     for (;;) {
 	asm volatile ("hlt");
     }

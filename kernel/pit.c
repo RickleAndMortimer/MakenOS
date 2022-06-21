@@ -12,7 +12,6 @@ static isr_t timer_callback(interrupt_frame_t* frame)
     char x[20];
     tick++;
     term_write("Tick: \n", 7);
-    printNumber(tick, x);
 }
 
 void initTimer(uint32_t frequency)

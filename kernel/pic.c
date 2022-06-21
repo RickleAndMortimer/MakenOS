@@ -110,6 +110,17 @@ void clearMaskIRQ(unsigned char IRQline) {
     my_outb(port, value);        
 }
 
+void disableAllIRQs() {
+    for (uint8_t i = 0; i < 16; i++) {
+	setMaskIRQ(i);
+    }
+}
+
+void enableAllIRQs() {
+    for (uint8_t i = 0; i < 16; i++) {
+	setMaskIRQ(i);
+    }
+}
 void remapPIC(int offset1, int offset2)
 {
 	unsigned char a1, a2;
