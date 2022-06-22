@@ -118,7 +118,7 @@ void disableAllIRQs() {
 
 void enableAllIRQs() {
     for (uint8_t i = 0; i < 16; i++) {
-	setMaskIRQ(i);
+	clearMaskIRQ(i);
     }
 }
 void remapPIC(int offset1, int offset2)
