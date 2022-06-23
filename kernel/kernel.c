@@ -117,12 +117,14 @@ void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
 // Kernel entrypoint
 void _start(struct stivale2_struct *stivale2_struct) {
     // Let's get the terminal structure tag from the bootloader.
-    struct stivale2_struct_tag_terminal *term_str_tag;
+    struct stivale2_struct_tag_terminal* term_str_tag;
     term_str_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_TERMINAL_ID);
     // Access RSDP for ACPI
-    struct stivale2_struct_tag_rsdp *rsdp_tag;
+    struct stivale2_struct_tag_rsdp* rsdp_tag;
     rsdp_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_RSDP_ID);
-
+    // Get LAPIC info
+    struct stivale2_struct_tag_smp* smp_tag;
+    smp_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_SMP_ID);
     // Check if the tags were actually found.
     if (term_str_tag == NULL) {
         for (;;) {
@@ -135,6 +137,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
             asm ("hlt");
         }
     }
+
     // Let's get the address of the terminal write function.
     void *term_write_ptr = (void *)term_str_tag->term_write;
     
@@ -172,12 +175,23 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("\nfinding APICS\n", 15);
     parseMADT();
     term_write("found APICS\n", 13);
+
     term_write("testing results\n", 16);
-    for (int i = 0; i < 3; i++) {
-    	printNumber(ioapic_source_overrides[i]->head.record_length, x);
-    	printNumber(ioapic_source_overrides[i]->bus_source, x);
-    	printNumber(ioapic_source_overrides[i]->IRQ_source, x);
+
+    term_write("my results\n", 12);
+    printNumber(processor_apics[0]->head.record_length, x);
+    printNumber(processor_apics[0]->id, x);
+    printNumber(processor_apics[0]->ACPI_processor_id, x);
+
+    if (smp_tag) {
+        term_write("limine's results\n", 18);
+        printNumber(smp_tag->cpu_count, x);
+        printNumber(smp_tag->flags, x);
+        printNumber(smp_tag->unused, x);
+        printNumber(smp_tag->smp_info[0].lapic_id, x);
+        printNumber(smp_tag->smp_info[0].processor_id, x);
     }
+
     term_write("results done\n", 14);
 
     // Initialize devices
