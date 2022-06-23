@@ -32,8 +32,10 @@ void itoa(int value, char* str, int base) {
         str[i++] = value % base + '0';
         
     } while ((value /= base) > 0);
+
     if (sign < 0)
         str[i++] = '-';
+
     str[i] = '\0';
     reverse(str);
 }

@@ -6,7 +6,11 @@
 #include <pic.h>
 #include <idt.h>
 #include <ps2.h>
+#include <acpi.h>
 
+extern RSDPDescriptor20 *rsdp_descriptor;
+extern XSDT *xsdt;
+extern RSDT *rsdt;
 // Write to console function shared amongst the codebase
 void (*term_write)(const char *string, size_t length);
 
@@ -134,8 +138,34 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("Hello World\n", 13);
     initKeyboard();
     char x[20];
-    printNumber(sizeof(int), x);
+    // start accessing XSDT/RSDT entries
+    printNumber(rsdp_tag->rsdp, x);
+
+    rsdp_descriptor = (RSDPDescriptor20*) rsdp_tag->rsdp;
+    if (rsdp_descriptor->descriptor10.revision == 2) {
+	xsdt = (XSDT*)rsdp_descriptor->xsdt_address;
+    }
+    rsdt = (RSDT*)rsdp_descriptor->descriptor10.rsdt_address;
+
+    if ((validateRSDPChecksum() & 0xFF) == 0) {
+	term_write("ACPI ready to go\n", 18);
+	printNumber(rsdp_descriptor->descriptor10.revision, x);
+    }
+    term_write(rsdt->h.signature, 4);
+    // Find FADT and enable ACPI mode there
+    ACPISDTHeader* fadt = findHeader("FACP");
+    if (fadt) {
+    	term_write(fadt->signature, 4);
+    }
+    // Find MADT
+    ACPISDTHeader* madt = findHeader("APIC");
+    if (madt) {
+    	term_write(madt->signature, 4);
+    }
+
+    // Initialize devices
     // initTimer(50000);
+    initKeyboard();
     initIdt();
     for (;;) {
 	asm volatile ("hlt");

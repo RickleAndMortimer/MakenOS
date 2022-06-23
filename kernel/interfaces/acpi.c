@@ -1,52 +1,76 @@
 #include <stdint.h>
 #include <acpi.h>
+#include <stddef.h>
 
-void loadRSDPTable(uint64_t rsdp_pointer) {
-    RSDPDescriptor20 *descriptor = (RSDPDescriptor20 *)rsdp_pointer;
+RSDPDescriptor20 *rsdp_descriptor;
+RSDT* rsdt;
+XSDT* xsdt;
 
-    // validate RSDP table by summing each byte
-    uint64_t checksum = descriptor->descriptor10.checksum;
+uint8_t validateRSDPChecksum() {
+    uint64_t checksum = rsdp_descriptor->descriptor10.checksum;
     for (uint8_t i = 0; i < 8; i++) {
-	checksum += descriptor->descriptor10.signature[i];
+	checksum += rsdp_descriptor->descriptor10.signature[i];
     }
 
     for (uint8_t i = 0; i < 6; i++) {
-	checksum += descriptor->descriptor10.OEM_id[i];
+	checksum += rsdp_descriptor->descriptor10.OEM_id[i];
     }
 
-    uint32_t address_byte = descriptor->descriptor10.rsdt_address;
-    checksum += descriptor->descriptor10.revision;
+    uint32_t address_byte = rsdp_descriptor->descriptor10.rsdt_address;
+    checksum += rsdp_descriptor->descriptor10.revision;
 
     // split address into bytes and add to the checksum
-    for (int i = 0 ; i < 3; i++) {
+    for (int i = 0 ; i < 4; i++) {
     	checksum += address_byte & 0xFF;
     	address_byte >>= 8;
     }
 
     // add these bytes if ACPI is version 2
-    if (descriptor->descriptor10.revision == 2) {
-	address_byte = descriptor->length;
-        for (int i = 0 ; i < 3; i++) {
+    if (rsdp_descriptor->descriptor10.revision == 2) {
+	address_byte = rsdp_descriptor->length;
+        for (int i = 0 ; i < 4; i++) {
     	    checksum += address_byte & 0xFF;
     	    address_byte >>= 8;
         }
 
-	address_byte = descriptor->xsdt_address;
-        for (int i = 0 ; i < 7; i++) {
+	address_byte = rsdp_descriptor->xsdt_address;
+        for (int i = 0 ; i < 8; i++) {
     	    checksum += address_byte & 0xFF;
     	    address_byte >>= 8;
         }
 
-	checksum += descriptor->extended_checksum;
+	checksum += rsdp_descriptor->extended_checksum;
 
 	for (uint8_t i = 0; i < 3; i++) {
-	    checksum += descriptor->reserved[i];
+	    checksum += rsdp_descriptor->reserved[i];
     	}
     }
-    if (checksum & 1) {
-	// ACPI cannot be used
-    }
-    else {
-	// TODO: Parse RSDT and XSDT
-    }
+    return checksum;
 }
+
+uint8_t validateSDTChecksum(ACPISDTHeader* table_header) {
+    uint8_t sum = 0;
+ 
+    for (int i = 0; i < table_header->length; i++)
+    {
+        sum += ((uint8_t *) table_header)[i];
+    }
+ 
+    return sum == 0;
+}
+
+ACPISDTHeader* findHeader(char* signature) {
+    int entries = (rsdt->h.length - sizeof(rsdt->h)) / 4;
+
+    for (int i = 0; i < entries; i++)
+    {
+        ACPISDTHeader *header = (ACPISDTHeader *) rsdt->other_SDT[i];
+        if (header->signature[0] == signature[0] && header->signature[1] == signature[1] && header->signature[2] == signature[2] && header->signature[3] == signature[3])
+            return header;
+    }
+
+    // No header found
+    return NULL;
+}
+
+

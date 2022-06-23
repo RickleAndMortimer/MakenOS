@@ -39,4 +39,8 @@ typedef struct {
     uint64_t other_SDT[];
 } __attribute__ ((packed)) XSDT;
 
-void loadRSDPTable(uint64_t rsdp_address);
+XSDT* getXSDT();
+RSDT* getRSDT();
+uint8_t validateRSDPChecksum();
+uint8_t validateSDTChecksum(ACPISDTHeader* table_header);
+ACPISDTHeader* findHeader(char* signature);
