@@ -32,8 +32,10 @@ void itoa(int value, char* str, int base) {
         str[i++] = value % base + '0';
         
     } while ((value /= base) > 0);
+
     if (sign < 0)
         str[i++] = '-';
+
     str[i] = '\0';
     reverse(str);
 }
@@ -68,10 +70,10 @@ void irq_handler(interrupt_frame_t* frame)
 {
     // Send an EOI (end of interrupt) signal to the PICs->
     // If this interrupt involved the slave->
-    sendEOIPIC(frame->int_no);
 
     if (&interrupt_handlers[frame->int_no] != NULL)
     {
         interrupt_handlers[frame->int_no](frame);
     }
+    sendEOIPIC(frame->int_no);
 }

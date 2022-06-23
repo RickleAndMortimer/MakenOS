@@ -2,6 +2,9 @@
 # Change as needed.
 override KERNEL := kernel.elf
 
+override INCLUDE_DIR := $(shell find . -type d -name '*')
+override INCLUDE_FLAGS := $(addprefix -I, $(shell find . -type d -name '*'))
+
 # It is highly recommended to use a custom built cross toolchain to build a kernel.
 # We are only using "cc" as a placeholder here. It may work by using
 # the host system's toolchain, but this is not guaranteed.
@@ -16,14 +19,14 @@ LD := ld
 endif
 
 # User controllable CFLAGS.
-CFLAGS ?= -O2 -g -Wall -Wextra -pipe 
+CFLAGS ?= -O2 -Wall -Wextra -pipe 
 
 # User controllable linker flags. We set none by default.
 LDFLAGS ?=
 
 # Internal C flags that should not be changed by the user.
 override INTERNALCFLAGS :=   \
-	-I.                  \
+	$(INCLUDE_FLAGS)     \
 	-std=gnu11           \
 	-ffreestanding       \
 	-fno-stack-protector \
@@ -65,7 +68,7 @@ stivale2.h:
 -include $(HEADER_DEPS)
 
 %.o: %.c stivale2.h
-	$(CC) -g $(CFLAGS) $(INTERNALCFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INTERNALCFLAGS) -c $< -o $@
 
 # Link rules for the final kernel executable.
 $(KERNEL): $(OBJ) 

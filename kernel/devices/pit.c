@@ -5,21 +5,16 @@
 
 uint32_t tick = 0;
 
-extern isr_t interrupt_handlers[];
-
 static isr_t timer_callback(interrupt_frame_t* frame)
 {
-    char x[20];
-    tick++;
-    term_write("Tick: \n", 7);
-    printNumber(tick, x);
+    term_write(".", 1);
 }
 
 void initTimer(uint32_t frequency)
 {
     // Firstly, register our timer callback.
     term_write("Initializing timer\n", 19);
-    register_interrupt_handler(32, &timer_callback);
+    register_interrupt_handler(32, timer_callback);
 
     // The value we send to the PIT is the value to divide it's input clock
     // (1193180 Hz) by, to get our required frequency. Important to note is
@@ -38,4 +33,9 @@ void initTimer(uint32_t frequency)
     my_outb(0x40, h);
     term_write("Timer initialized\n", 18);
     clearMaskIRQ(0);
+}
+
+void sleep() {
+
+
 }

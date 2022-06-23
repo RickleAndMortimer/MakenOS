@@ -12,3 +12,4 @@ typedef void (*isr_t) (interrupt_frame_t* frame);
 void exception_handler(interrupt_frame_t* frame);
 void irq_handler(interrupt_frame_t* frame); 
 void register_interrupt_handler(uint8_t irq, isr_t handler);
+void printNumber(uint64_t num, char* x);
