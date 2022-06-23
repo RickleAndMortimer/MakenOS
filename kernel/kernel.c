@@ -6,11 +6,21 @@
 #include <pic.h>
 #include <idt.h>
 #include <ps2.h>
-#include <acpi.h>
+#include <madt.h>
 
 extern RSDPDescriptor20 *rsdp_descriptor;
-extern XSDT *xsdt;
-extern RSDT *rsdt;
+extern XSDT* xsdt;
+extern RSDT* rsdt;
+extern MADT* madt;
+
+extern ProcessorAPIC* processor_apics[];
+extern IOAPIC* ioapics[];
+extern IOAPICSourceOverride* ioapic_source_overrides[];
+extern IOAPICNonMaskableInterruptSource* ioapic_interrupt_sources[];
+extern IOAPICNonMaskableInterrupt* ioapic_interrupts[];
+extern LAPICAddressOverride* lapic_address_overrides[];
+extern x2LAPIC* x2_lapics[];
+
 // Write to console function shared amongst the codebase
 void (*term_write)(const char *string, size_t length);
 
@@ -145,7 +155,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     if (rsdp_descriptor->descriptor10.revision == 2) {
 	xsdt = (XSDT*)rsdp_descriptor->xsdt_address;
     }
-    rsdt = (RSDT*)rsdp_descriptor->descriptor10.rsdt_address;
+    rsdt = (RSDT*)(uintptr_t)rsdp_descriptor->descriptor10.rsdt_address;
 
     if ((validateRSDPChecksum() & 0xFF) == 0) {
 	term_write("ACPI ready to go\n", 18);
@@ -157,11 +167,18 @@ void _start(struct stivale2_struct *stivale2_struct) {
     if (fadt) {
     	term_write(fadt->signature, 4);
     }
-    // Find MADT
-    ACPISDTHeader* madt = findHeader("APIC");
-    if (madt) {
-    	term_write(madt->signature, 4);
+    // Initialize MADT
+    initMADT();
+    term_write("\nfinding APICS\n", 15);
+    parseMADT();
+    term_write("found APICS\n", 13);
+    term_write("testing results\n", 16);
+    for (int i = 0; i < 3; i++) {
+    	printNumber(ioapic_source_overrides[i]->head.record_length, x);
+    	printNumber(ioapic_source_overrides[i]->bus_source, x);
+    	printNumber(ioapic_source_overrides[i]->IRQ_source, x);
     }
+    term_write("results done\n", 14);
 
     // Initialize devices
     // initTimer(50000);
