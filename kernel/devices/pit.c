@@ -7,7 +7,6 @@ uint32_t tick = 0;
 
 static isr_t timer_callback(interrupt_frame_t* frame)
 {
-    char x[20];
     term_write(".", 1);
 }
 

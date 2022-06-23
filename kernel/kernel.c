@@ -2,9 +2,13 @@
 #include <stddef.h>
 #include <stivale2.h>
 #include <pit.h>
+#include <isr.h>
 #include <pic.h>
 #include <idt.h>
 #include <ps2.h>
+
+// Write to console function shared amongst the codebase
+void (*term_write)(const char *string, size_t length);
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an array in .bss.
@@ -79,19 +83,14 @@ static struct stivale2_header stivale_hdr = {
     .tags = (uintptr_t)&framebuffer_hdr_tag
 };
 
-// We will now write a helper function which will allow us to scan for tags
-// that we want FROM the bootloader (structure tags).
+// Scan for tags in linked list
 void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
     struct stivale2_tag *current_tag = (void *)stivale2_struct->tags;
     for (;;) {
-        // If the tag pointer is NULL (end of linked list), we did not find
-        // the tag. Return NULL to signal this.
         if (current_tag == NULL) {
             return NULL;
         }
 
-        // Check whether the identifier matches. If it does, return a pointer
-        // to the matching tag.
         if (current_tag->identifier == id) {
             return current_tag;
         }
@@ -101,16 +100,23 @@ void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
     }
 }
 
-void (*term_write)(const char *string, size_t length);
-// The following will be our kernel's entry point.
+// Kernel entrypoint
 void _start(struct stivale2_struct *stivale2_struct) {
     // Let's get the terminal structure tag from the bootloader.
     struct stivale2_struct_tag_terminal *term_str_tag;
     term_str_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_TERMINAL_ID);
+    // Access RSDP for ACPI
+    struct stivale2_struct_tag_rsdp *rsdp_tag;
+    rsdp_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_RSDP_ID);
 
-    // Check if the tag was actually found.
+    // Check if the tags were actually found.
     if (term_str_tag == NULL) {
-        // It wasn't found, just hang...
+        for (;;) {
+            asm ("hlt");
+        }
+    }
+
+    if (rsdp_tag == NULL) {
         for (;;) {
             asm ("hlt");
         }
@@ -127,6 +133,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // a simple "Hello World" to screen.
     term_write("Hello World\n", 13);
     initKeyboard();
+    char x[20];
+    printNumber(sizeof(int), x);
     // initTimer(50000);
     initIdt();
     for (;;) {
