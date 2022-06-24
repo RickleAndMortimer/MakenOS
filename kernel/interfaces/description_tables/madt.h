@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 typedef struct {
-    ACPISDTHeader h;
+    ACPISDTHeader header;
     // 0: Local APIC Address
     // 1: Flags ()
     uint32_t APIC_address;
@@ -77,3 +77,4 @@ typedef struct {
 } __attribute__((packed)) x2LAPIC;
 
 void initMADT();
+void parseMADT();

@@ -2,15 +2,26 @@
 #include <stddef.h>
 #include <stivale2.h>
 #include <pit.h>
+#include <apic.h>
 #include <isr.h>
 #include <pic.h>
 #include <idt.h>
 #include <ps2.h>
-#include <acpi.h>
+#include <madt.h>
 
 extern RSDPDescriptor20 *rsdp_descriptor;
-extern XSDT *xsdt;
-extern RSDT *rsdt;
+extern XSDT* xsdt;
+extern RSDT* rsdt;
+extern MADT* madt;
+
+extern ProcessorAPIC* processor_apics[];
+extern IOAPIC* ioapics[];
+extern IOAPICSourceOverride* ioapic_source_overrides[];
+extern IOAPICNonMaskableInterruptSource* ioapic_interrupt_sources[];
+extern IOAPICNonMaskableInterrupt* ioapic_interrupts[];
+extern LAPICAddressOverride* lapic_address_overrides[];
+extern x2LAPIC* x2_lapics[];
+
 // Write to console function shared amongst the codebase
 void (*term_write)(const char *string, size_t length);
 
@@ -107,12 +118,14 @@ void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
 // Kernel entrypoint
 void _start(struct stivale2_struct *stivale2_struct) {
     // Let's get the terminal structure tag from the bootloader.
-    struct stivale2_struct_tag_terminal *term_str_tag;
+    struct stivale2_struct_tag_terminal* term_str_tag;
     term_str_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_TERMINAL_ID);
     // Access RSDP for ACPI
-    struct stivale2_struct_tag_rsdp *rsdp_tag;
+    struct stivale2_struct_tag_rsdp* rsdp_tag;
     rsdp_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_RSDP_ID);
-
+    // Get LAPIC info
+    struct stivale2_struct_tag_smp* smp_tag;
+    smp_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_SMP_ID);
     // Check if the tags were actually found.
     if (term_str_tag == NULL) {
         for (;;) {
@@ -125,6 +138,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
             asm ("hlt");
         }
     }
+
     // Let's get the address of the terminal write function.
     void *term_write_ptr = (void *)term_str_tag->term_write;
     
@@ -145,7 +159,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     if (rsdp_descriptor->descriptor10.revision == 2) {
 	xsdt = (XSDT*)rsdp_descriptor->xsdt_address;
     }
-    rsdt = (RSDT*)rsdp_descriptor->descriptor10.rsdt_address;
+    rsdt = (RSDT*)(uintptr_t)rsdp_descriptor->descriptor10.rsdt_address;
 
     if ((validateRSDPChecksum() & 0xFF) == 0) {
 	term_write("ACPI ready to go\n", 18);
@@ -157,15 +171,40 @@ void _start(struct stivale2_struct *stivale2_struct) {
     if (fadt) {
     	term_write(fadt->signature, 4);
     }
-    // Find MADT
-    ACPISDTHeader* madt = findHeader("APIC");
-    if (madt) {
-    	term_write(madt->signature, 4);
+    // Initialize MADT
+    initMADT();
+    term_write("\nfinding APICS\n", 15);
+    parseMADT();
+    term_write("found APICS\n", 13);
+
+    term_write("testing results\n", 16);
+
+    term_write("my results\n", 12);
+    printNumber(madt->header.length, x);
+    printNumber(madt->APIC_address, x);
+    for (uint8_t i = 0; i < 5; i++) {
+	term_write("IOAPIC\n", 7);
+        printNumber(ioapic_source_overrides[i]->bus_source, x);
+        printNumber(ioapic_source_overrides[i]->IRQ_source, x);
+        printNumber(ioapic_source_overrides[i]->global_system_interrupt, x);
     }
+
+    if (smp_tag) {
+        term_write("limine's results\n", 18);
+        printNumber(smp_tag->cpu_count, x);
+        printNumber(smp_tag->flags, x);
+        printNumber(smp_tag->unused, x);
+        printNumber(smp_tag->smp_info[0].lapic_id, x);
+        printNumber(smp_tag->smp_info[0].processor_id, x);
+    }
+
+    term_write("results done\n", 14);
 
     // Initialize devices
     // initTimer(50000);
     initKeyboard();
+    enableAPIC();
+    enableAPICTimer();
     initIdt();
     for (;;) {
 	asm volatile ("hlt");

@@ -51,7 +51,7 @@ uint8_t validateRSDPChecksum() {
 uint8_t validateSDTChecksum(ACPISDTHeader* table_header) {
     uint8_t sum = 0;
  
-    for (int i = 0; i < table_header->length; i++)
+    for (uint32_t i = 0; i < table_header->length; i++)
     {
         sum += ((uint8_t *) table_header)[i];
     }
@@ -60,11 +60,11 @@ uint8_t validateSDTChecksum(ACPISDTHeader* table_header) {
 }
 
 ACPISDTHeader* findHeader(char* signature) {
-    int entries = (rsdt->h.length - sizeof(rsdt->h)) / 4;
+    uint32_t entries = (rsdt->h.length - sizeof(rsdt->h)) / 4;
 
-    for (int i = 0; i < entries; i++)
+    for (uint32_t i = 0; i < entries; i++)
     {
-        ACPISDTHeader *header = (ACPISDTHeader *) rsdt->other_SDT[i];
+        ACPISDTHeader *header = (ACPISDTHeader *) (uintptr_t)rsdt->other_SDT[i];
         if (header->signature[0] == signature[0] && header->signature[1] == signature[1] && header->signature[2] == signature[2] && header->signature[3] == signature[3])
             return header;
     }
