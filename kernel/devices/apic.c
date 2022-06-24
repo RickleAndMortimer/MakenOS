@@ -1,5 +1,8 @@
 #include <cpuid.h>
 #include <apic.h>
+#include <kernel.h>
+#include <pic.h>
+#include <isr.h>
 #include <stdint.h>
 
 #define IA32_APIC_BASE_MSR 0x1B
@@ -76,44 +79,44 @@ const uint32_t CPUID_FLAG_MSR = 1 << 5;
  
 static int cpuHasMSR()
 {
-   uint32_t eax, edx;
-   cpuid(1, &eax, &edx);
-   return edx & CPUID_FLAG_MSR;
+    uint32_t eax, edx;
+    cpuid(1, &eax, &edx);
+    return edx & CPUID_FLAG_MSR;
 }
  
 void cpuGetMSR(uint32_t msr, uint32_t *lo, uint32_t *hi)
 {
-   asm volatile("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
+    asm volatile("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
 }
  
 void cpuSetMSR(uint32_t msr, uint32_t lo, uint32_t hi)
 {
-   asm volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
+    asm volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
 }
 
 uintptr_t cpuGetAPICBase() 
 {
-   uint32_t eax, edx;
-   cpuGetMSR(IA32_APIC_BASE_MSR, &eax, &edx);
+    uint32_t eax, edx;
+    cpuGetMSR(IA32_APIC_BASE_MSR, &eax, &edx);
  
 #ifdef __PHYSICAL_MEMORY_EXTENSION__
-   return (eax & 0xfffff000) | ((edx & 0x0f) << 32);
+    return (eax & 0xfffff000) | ((edx & 0x0f) << 32);
 #else
-   return (eax & 0xfffff000);
+    return (eax & 0xfffff000);
 #endif
 }
   
 /* Set the physical address for local APIC registers */
 void cpuSetAPICBase(uintptr_t apic) 
 {
-   uint32_t edx = 0;
-   uint32_t eax = (apic & 0xfffff0000) | IA32_APIC_BASE_MSR_ENABLE;
+    uint32_t edx = 0;
+    uint32_t eax = (apic & 0xfffff0000) | IA32_APIC_BASE_MSR_ENABLE;
  
 #ifdef __PHYSICAL_MEMORY_EXTENSION__
-   edx = (apic >> 32) & 0x0f;
+    edx = (apic >> 32) & 0x0f;
 #endif
  
-   cpuSetMSR(IA32_APIC_BASE_MSR, eax, edx);
+    cpuSetMSR(IA32_APIC_BASE_MSR, eax, edx);
 }
 
 static int getModel(void)
@@ -123,7 +126,6 @@ static int getModel(void)
     return ebx;
 }
  
-/* Example: Check for builtin local APIC. */
 static int checkAPIC(void)
 {
     unsigned int eax, unused, edx;
@@ -131,27 +133,34 @@ static int checkAPIC(void)
     return edx & CPUID_FEAT_EDX_APIC;
 }
  
-static uint32_t readAPICRegister(uint32_t reg)
+uint32_t readAPICRegister(uint32_t reg)
 {
     return *((volatile uint32_t *)(cpuGetAPICBase() + reg));
 } 
 
-static void writeAPICRegister(uint32_t reg, uint32_t value)
+void writeAPICRegister(uint32_t reg, uint32_t value)
 {
     *((volatile uint32_t *)(cpuGetAPICBase() + reg)) = value;
 }
 
 void enableAPIC(void) {
-    // disable PIC
+    term_write("Enabling APIC\n", 14);
+    // remap and disable PIC
     asm volatile ("mov $0xff, %al;"
 		  "out %al, $0xa1;"
 		  "out %al, $0x21;");
+    disableAllIRQs();
+    remapPIC(0x20, 0x28);
     /* Hardware enable the Local APIC if it wasn't enabled */
     cpuSetAPICBase(cpuGetAPICBase());
+    char x[20];
+    printNumber(cpuGetAPICBase(), x);
  
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
-    writeAPICRegister(0xF0, readAPICRegister(0xF0) | 0x100);
+    writeAPICRegister(0xF0, readAPICRegister(0xF0) | 0x1FF);
+    term_write("APIC enabled!\n", 14);
 }
+
 void enableAPICTimer(void) {
     writeAPICRegister(0x3E0, 0x3);
     writeAPICRegister(0x380, 0xFFFFFFFF);
@@ -160,14 +169,14 @@ void enableAPICTimer(void) {
 //IOAPIC
 uint32_t cpuReadIOAPIC(void *ioapicaddr, uint32_t reg)
 {
-   uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
-   ioapic[0] = (reg & 0xFF);
-   return ioapic[4];
+    uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
+    ioapic[0] = (reg & 0xFF);
+    return ioapic[4];
 }
  
 void cpuWriteIOAPIC(void *ioapicaddr, uint32_t reg, uint32_t value)
 {
-   uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
-   ioapic[0] = (reg & 0xFF);
-   ioapic[4] = value;
+    uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
+    ioapic[0] = (reg & 0xFF);
+    ioapic[4] = value;
 }

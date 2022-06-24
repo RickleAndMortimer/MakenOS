@@ -10,7 +10,7 @@ typedef struct GenericAddressStructure
     uint8_t bit_offset;
     uint8_t access_size;
     uint64_t address;
-} GenericAddressStructure;
+} __attribute__((packed)) GenericAddressStructure;
 
 typedef struct FADT
 {
@@ -77,4 +77,4 @@ typedef struct FADT
     GenericAddressStructure X_PM_timer_block;
     GenericAddressStructure X_GPE0_block;
     GenericAddressStructure X_GPE1_block;
-}
+} __attribute__((packed)) FADT;

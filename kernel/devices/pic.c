@@ -36,6 +36,15 @@ uint8_t my_inb(uint16_t port)
     return ret;
 }
 
+uint16_t my_inw(uint16_t port)
+{
+    uint16_t ret;
+    asm volatile ( "inw %1, %0"
+                   : "=a"(ret)
+                   : "Nd"(port) );
+    return ret;
+}
+
 void my_outb(uint16_t port, uint8_t val)
 {
     asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
@@ -73,7 +82,7 @@ uint16_t pic_get_isr(void)
     return __pic_get_irq_reg(PIC_READ_ISR);
 }
 
-void sendEOIPIC(unsigned char irq)
+void sendEOIPIC(uint8_t irq)
 {
 	if(irq >= 8)
 		my_outb(PIC2_COMMAND,PIC_EOI);
@@ -81,7 +90,7 @@ void sendEOIPIC(unsigned char irq)
 	my_outb(PIC1_COMMAND,PIC_EOI);
 }
 
-void setMaskIRQ(unsigned char IRQline) {
+void setMaskIRQ(uint8_t IRQline) {
     uint16_t port;
     uint8_t value;
  
@@ -95,7 +104,7 @@ void setMaskIRQ(unsigned char IRQline) {
     my_outb(port, value);        
 }
  
-void clearMaskIRQ(unsigned char IRQline) {
+void clearMaskIRQ(uint8_t IRQline) {
     uint16_t port;
     uint8_t value;
  
@@ -121,9 +130,10 @@ void enableAllIRQs() {
 	clearMaskIRQ(i);
     }
 }
+
 void remapPIC(int offset1, int offset2)
 {
-	unsigned char a1, a2;
+	uint8_t a1, a2;
  
 	a1 = my_inb(PIC1_DATA);                        // save masks
 	a2 = my_inb(PIC2_DATA);

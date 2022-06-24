@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stivale2.h>
 #include <pit.h>
+#include <apic.h>
 #include <isr.h>
 #include <pic.h>
 #include <idt.h>
@@ -179,9 +180,14 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("testing results\n", 16);
 
     term_write("my results\n", 12);
-    printNumber(processor_apics[0]->head.record_length, x);
-    printNumber(processor_apics[0]->id, x);
-    printNumber(processor_apics[0]->ACPI_processor_id, x);
+    printNumber(madt->header.length, x);
+    printNumber(madt->APIC_address, x);
+    for (uint8_t i = 0; i < 5; i++) {
+	term_write("IOAPIC\n", 7);
+        printNumber(ioapic_source_overrides[i]->bus_source, x);
+        printNumber(ioapic_source_overrides[i]->IRQ_source, x);
+        printNumber(ioapic_source_overrides[i]->global_system_interrupt, x);
+    }
 
     if (smp_tag) {
         term_write("limine's results\n", 18);
@@ -197,6 +203,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // Initialize devices
     // initTimer(50000);
     initKeyboard();
+    enableAPIC();
+    enableAPICTimer();
     initIdt();
     for (;;) {
 	asm volatile ("hlt");

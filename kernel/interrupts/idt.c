@@ -14,22 +14,23 @@ idt64_ptr_t idt_ptr = (idt64_ptr_t) {
 };
 
 void setIdtEntry(idt64_entry_t *target, uint64_t offset, uint16_t selector, uint8_t ist, uint8_t type_attributes) {
-	target->offset_1 = offset & 0xFFFF;
-	target->selector = selector;
-	target->ist = ist;
-	target->type_attributes = type_attributes;
-	target->offset_2 = (offset >> 16) & 0xFFFF;
-	target->offset_3 = (offset >> 32) & 0xFFFFFFFF;
-	target->zero = 0;
+    target->offset_1 = offset & 0xFFFF;
+    target->selector = selector;
+    target->ist = ist;
+    target->type_attributes = type_attributes;
+    target->offset_2 = (offset >> 16) & 0xFFFF;
+    target->offset_3 = (offset >> 32) & 0xFFFFFFFF;
+    target->zero = 0;
 }
+
 void initIdt() {
-	for (uint8_t i = 0; i < 32; i++) {
-		setIdtEntry(&idt_entries[i], (uint64_t)isr_stub_table[i], 0x28, 0, 0x8E);
-	}
-	for (uint8_t i = 0; i < 16; i++) {
-		setIdtEntry(&idt_entries[i+32], (uint64_t)irq_stub_table[i], 0x28, 0, 0x8E);
-	}
-    	remapPIC(0x20, 0x28);
-	asm volatile("lidt %0" : : "m"(idt_ptr));
-	asm volatile("sti");
+    for (uint8_t i = 0; i < 32; i++) {
+        setIdtEntry(&idt_entries[i], (uint64_t)isr_stub_table[i], 0x28, 0, 0x8E);
+    }
+    for (uint8_t i = 0; i < 16; i++) {
+        setIdtEntry(&idt_entries[i+32], (uint64_t)irq_stub_table[i], 0x28, 0, 0x8E);
+    }
+        remapPIC(0x20, 0x28);
+    asm volatile("lidt %0" : : "m"(idt_ptr));
+    asm volatile("sti");
 }
