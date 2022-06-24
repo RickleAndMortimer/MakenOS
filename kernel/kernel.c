@@ -2,7 +2,6 @@
 #include <stddef.h>
 #include <stivale2.h>
 #include <pit.h>
-#include <apic.h>
 #include <isr.h>
 #include <pic.h>
 #include <idt.h>
@@ -150,7 +149,6 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // We should now be able to call the above function pointer to print out
     // a simple "Hello World" to screen.
     term_write("Hello World\n", 13);
-    initKeyboard();
     char x[20];
     // start accessing XSDT/RSDT entries
     printNumber(rsdp_tag->rsdp, x);
@@ -201,11 +199,10 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("results done\n", 14);
 
     // Initialize devices
-    // initTimer(50000);
-    initKeyboard();
     enableAPIC();
-    enableAPICTimer();
+    initKeyboard();
     initIdt();
+    enableAPICTimer(5000);
     for (;;) {
 	asm volatile ("hlt");
     }
