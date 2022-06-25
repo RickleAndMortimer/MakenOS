@@ -177,7 +177,7 @@ void enableAPICTimer(uint32_t frequency) {
     writeAPICRegister(0x380, 0xFFFFFFFF);
     // Sleep for 10 ms
     term_write("Calibrating APIC Timer\n", 24);
-    PIT_sleep(5000);
+    PIT_sleep(10);
     term_write("Finished Calibration\n", 22);
     // Mask APIC Timer interrupt
     writeAPICRegister(0x320, 0x10000);
