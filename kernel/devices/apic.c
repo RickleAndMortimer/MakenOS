@@ -4,6 +4,7 @@
 #include <pic.h>
 #include <pit.h>
 #include <isr.h>
+#include <print.h>
 #include <stdint.h>
 
 #define IA32_APIC_BASE_MSR 0x1B
@@ -11,7 +12,8 @@
 #define IA32_APIC_BASE_MSR_ENABLE 0x800
 #define APIC_EOI_REGISTER 0xB0
 
-enum {
+enum 
+{
     CPUID_FEAT_ECX_SSE3         = 1 << 0, 
     CPUID_FEAT_ECX_PCLMUL       = 1 << 1,
     CPUID_FEAT_ECX_DTES64       = 1 << 2,
@@ -144,14 +146,14 @@ void writeAPICRegister(uint32_t reg, uint32_t value)
     *((volatile uint32_t *)(cpuGetAPICBase() + reg)) = value;
 }
 
-void enableAPIC(void) {
+void enableAPIC(void) 
+{
     term_write("Enabling APIC\n", 14);
-    // remap and disable PIC
+    // disable PIC
     asm volatile ("mov $0xff, %al;"
 		  "out %al, $0xa1;"
 		  "out %al, $0x21;");
     disableAllIRQs();
-    remapPIC(0x20, 0x28);
     /* Hardware enable the Local APIC if it wasn't enabled */
     cpuSetAPICBase(cpuGetAPICBase());
     char x[20];
@@ -167,17 +169,19 @@ void enableAPIC(void) {
 static void APIC_timer_callback(InterruptFrame* frame)
 {
     // do timer stuff
-    term_write(".", 1);
+    writeAPICRegister(0xB0, 0);
+    term_write("x", 1);
 }
 
-void enableAPICTimer(uint32_t frequency) {
-    // Enable APIC Timer
+void enableAPICTimer(uint32_t frequency) 
+{
     initPIT(frequency);
+    // Enable APIC Timer
     writeAPICRegister(0x3E0, 0x3);
     writeAPICRegister(0x380, 0xFFFFFFFF);
     // Sleep for 10 ms
     term_write("Calibrating APIC Timer\n", 24);
-    PIT_sleep(10);
+    PIT_sleep(1);
     term_write("Finished Calibration\n", 22);
     // Mask APIC Timer interrupt
     writeAPICRegister(0x320, 0x10000);

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <pic.h>
 #include <kernel.h>
+#include <print.h>
 #include <isr.h>
 #include <ps2.h>
 

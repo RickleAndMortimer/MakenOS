@@ -7,8 +7,7 @@ uint32_t frequency = 1193180;
 
 static void PIT_callback(InterruptFrame* frame)
 {
-    // Do something here
-    term_write(".", 1);
+    sendEOIPIC(frame->int_no);
 }
 
 void initPIT(uint32_t new_frequency)
@@ -37,11 +36,11 @@ void initPIT(uint32_t new_frequency)
     clearMaskIRQ(0);
 }
 
-uint32_t PIT_sleep(uint64_t milliseconds) 
+uint32_t PIT_sleep(uint64_t milleseconds) 
 {
     uint32_t ticks = 0;
 
-    while (ticks <= (frequency / 1000 * milliseconds)) {
+    while (ticks < (frequency / 1000 * milleseconds)) {
 	ticks++;
 	asm ("hlt");
     }

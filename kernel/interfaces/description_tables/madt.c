@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <madt.h>
-#include <isr.h>
 
 MADT* madt;
 
@@ -23,7 +22,6 @@ void parseMADT()
     uint32_t length = sizeof(MADT);
     uintptr_t madt_address = (uintptr_t) madt;
 
-    char x[20];
     // array pointers
     int i, j, k, l, m, n, o;
     i = j = k = l = m = n = o = 0;

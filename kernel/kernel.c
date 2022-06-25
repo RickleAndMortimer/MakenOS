@@ -1,14 +1,14 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <stivale2.h>
-#include <pit.h>
-#include <isr.h>
-#include <pic.h>
-#include <idt.h>
-#include <ps2.h>
-#include <madt.h>
-#include <ioapic.h>
 #include <apic.h>
+#include <idt.h>
+#include <ioapic.h>
+#include <madt.h>
+#include <pic.h>
+#include <pit.h>
+#include <print.h>
+#include <ps2.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stivale2.h>
 
 extern RSDPDescriptor20 *rsdp_descriptor;
 extern XSDT* xsdt;
@@ -215,12 +215,11 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("results done\n", 14);
 
     // Initialize devices
-    initKeyboard();
     remapPIC(0x20, 0x28);
     initIdt();
     enableAPIC();
+    enableAPICTimer(5000);
     enableKeyboard(ioapics[0]->address);
-    // enableAPICTimer(5000);
     for (;;) {
 	asm volatile ("hlt");
     }

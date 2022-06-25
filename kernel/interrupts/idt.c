@@ -1,7 +1,5 @@
 #include <stdint.h>
 #include <idt.h>
-#include <pic.h>
-#include <isr.h>
 
 extern void* isr_stub_table[];
 extern void* irq_stub_table[];
