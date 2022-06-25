@@ -12,11 +12,13 @@ IOAPICNonMaskableInterrupt* ioapic_interrupts[32];
 LAPICAddressOverride* lapic_address_overrides[32];
 x2LAPIC* x2_lapics[32];
 
-void initMADT() {
+void initMADT() 
+{
     madt = (MADT*) findHeader("APIC");
 }
 
-void parseMADT() {
+void parseMADT() 
+{
     APICRecordHeader* head;
     uint32_t length = sizeof(MADT);
     uintptr_t madt_address = (uintptr_t) madt;
@@ -25,10 +27,12 @@ void parseMADT() {
     // array pointers
     int i, j, k, l, m, n, o;
     i = j = k = l = m = n = o = 0;
-    while (length < madt->header.length) {
+    while (length < madt->header.length) 
+    {
 	head = (APICRecordHeader*)(madt_address + length);
 	
-	switch (head->entry_type) {
+	switch (head->entry_type) 
+	{
 	    case 0:
 		processor_apics[i++] = (ProcessorAPIC*) head;
 		length += head->record_length;
@@ -58,6 +62,5 @@ void parseMADT() {
 		length += head->record_length;
 		break;
 	}
-	printNumber(head->entry_type, x);
     }
 }

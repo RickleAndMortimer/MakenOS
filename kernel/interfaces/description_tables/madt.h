@@ -2,7 +2,8 @@
 #include <acpi.h>
 #include <stddef.h>
 
-typedef struct {
+typedef struct MADT 
+{
     ACPISDTHeader header;
     // 0: Local APIC Address
     // 1: Flags ()
@@ -12,13 +13,15 @@ typedef struct {
     // n+1th entry: Record length
 } __attribute__((packed)) MADT;
 
-typedef struct {
+typedef struct APICRecordHeader
+{
     uint8_t entry_type;
     uint8_t record_length;
 } APICRecordHeader;
 
 // Entry Type 0
-typedef struct {
+typedef struct ProcessorAPIC
+{
     APICRecordHeader head;
     uint8_t ACPI_processor_id; 
     uint8_t id; 
@@ -26,7 +29,8 @@ typedef struct {
 } ProcessorAPIC;
 
 // Entry Type 1
-typedef struct {
+typedef struct IOAPIC
+{
     APICRecordHeader head;
     uint8_t id; 
     uint8_t reserved; 
@@ -35,7 +39,8 @@ typedef struct {
 } __attribute__((packed)) IOAPIC;
 
 // Entry Type 2
-typedef struct {
+typedef struct IOAPICSourceOverride
+{
     APICRecordHeader head;
     uint8_t bus_source; 
     uint8_t IRQ_source; 
@@ -68,7 +73,8 @@ typedef struct {
 } __attribute__((packed)) LAPICAddressOverride;
 
 // Entry Type 9
-typedef struct {
+typedef struct x2LAPIC
+{
     APICRecordHeader head;
     uint16_t reserved; 
     uint32_t id;

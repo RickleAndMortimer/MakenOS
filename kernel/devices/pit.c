@@ -5,7 +5,7 @@
 
 uint32_t frequency = 1193180;
 
-static isr_t PIT_callback(interrupt_frame_t* frame)
+static void PIT_callback(InterruptFrame* frame)
 {
     // Do something here
     term_write(".", 1);

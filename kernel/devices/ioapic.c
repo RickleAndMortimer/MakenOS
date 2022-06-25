@@ -22,7 +22,7 @@ void writeIOAPIC(size_t ioapicaddr, uint32_t reg, uint32_t value)
     ioapic[4] = value;
 }
 
-static void keyboardHandler(interrupt_frame_t* frame) {
+static void keyboardHandler(InterruptFrame* frame) {
     writeAPICRegister(0xB0, 0);
     term_write(".", 1);
 }
@@ -44,7 +44,6 @@ void readIOREDTBLs(size_t ioapicaddr) {
 }
 
 void enableKeyboard(size_t ioapicaddr) {
-    char x[20];
     //readIOREDTBLs(ioapicaddr);
     writeIOAPIC(ioapicaddr, 0x12, 0x21);
     register_interrupt_handler(0x21, &keyboardHandler);

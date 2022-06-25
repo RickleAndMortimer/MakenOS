@@ -1,19 +1,20 @@
 #include <stdint.h>
 
-typedef struct {
+typedef struct SegmentDescriptor
+{
     uint8_t base;
     uint8_t flags;
     uint8_t access_byte;
     uint8_t base_high;
     uint16_t base_low;
     uint16_t limit_low;
-}__attribute__((packed)) segment_descriptor_t;
+}__attribute__((packed)) SegmentDescriptor;
 
-typedef struct {
+typedef struct GDTPointer
+{
     uint64_t gdt_address;
     uint16_t limit;
-}__attribute__((packed)) gdtr_t;
+}__attribute__((packed)) GDTPointer;
 
-void setEntry(segment_descriptor_t *entry, uint32_t base, uint8_t flags, uint8_t access_byte, uint16_t limit);
-
-void setSystemEntry(segment_descriptor_t *entry_1, segment_descriptor_t *entry_2, uint64_t base, uint8_t flags, uint8_t access_byte, uint16_t limit);
+void setEntry(SegmentDescriptor* entry, uint32_t base, uint8_t flags, uint8_t access_byte, uint16_t limit);
+void setSystemEntry(SegmentDescriptor* entry_1, SegmentDescriptor* entry_2, uint64_t base, uint8_t flags, uint8_t access_byte, uint16_t limit);

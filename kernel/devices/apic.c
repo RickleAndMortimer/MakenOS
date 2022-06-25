@@ -164,7 +164,7 @@ void enableAPIC(void) {
 
 
 // APIC TIMER
-static isr_t APIC_timer_callback(interrupt_frame_t* frame)
+static void APIC_timer_callback(InterruptFrame* frame)
 {
     // do timer stuff
     term_write(".", 1);
@@ -188,5 +188,5 @@ void enableAPICTimer(uint32_t frequency) {
     writeAPICRegister(0x3E0, 0x3);
     writeAPICRegister(0x380, apic_ticks);
 
-    register_interrupt_handler(32, APIC_timer_callback);
+    register_interrupt_handler(32, &APIC_timer_callback);
 }

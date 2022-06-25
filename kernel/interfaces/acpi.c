@@ -6,13 +6,16 @@ RSDPDescriptor20 *rsdp_descriptor;
 RSDT* rsdt;
 XSDT* xsdt;
 
-uint8_t validateRSDPChecksum() {
+uint8_t validateRSDPChecksum() 
+{
     uint64_t checksum = rsdp_descriptor->descriptor10.checksum;
-    for (uint8_t i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < 8; i++) 
+    {
 	checksum += rsdp_descriptor->descriptor10.signature[i];
     }
 
-    for (uint8_t i = 0; i < 6; i++) {
+    for (uint8_t i = 0; i < 6; i++) 
+    {
 	checksum += rsdp_descriptor->descriptor10.OEM_id[i];
     }
 
@@ -20,21 +23,25 @@ uint8_t validateRSDPChecksum() {
     checksum += rsdp_descriptor->descriptor10.revision;
 
     // split address into bytes and add to the checksum
-    for (int i = 0 ; i < 4; i++) {
+    for (int i = 0 ; i < 4; i++) 
+    {
     	checksum += address_byte & 0xFF;
     	address_byte >>= 8;
     }
 
     // add these bytes if ACPI is version 2
-    if (rsdp_descriptor->descriptor10.revision == 2) {
+    if (rsdp_descriptor->descriptor10.revision == 2) 
+    {
 	address_byte = rsdp_descriptor->length;
-        for (int i = 0 ; i < 4; i++) {
+        for (int i = 0 ; i < 4; i++) 
+	{
     	    checksum += address_byte & 0xFF;
     	    address_byte >>= 8;
         }
 
 	address_byte = rsdp_descriptor->xsdt_address;
-        for (int i = 0 ; i < 8; i++) {
+        for (int i = 0 ; i < 8; i++) 
+	{
     	    checksum += address_byte & 0xFF;
     	    address_byte >>= 8;
         }
@@ -59,7 +66,8 @@ uint8_t validateSDTChecksum(ACPISDTHeader* table_header) {
     return sum == 0;
 }
 
-ACPISDTHeader* findHeader(char* signature) {
+ACPISDTHeader* findHeader(char* signature) 
+{
     uint32_t entries = (rsdt->h.length - sizeof(rsdt->h)) / 4;
 
     for (uint32_t i = 0; i < entries; i++)

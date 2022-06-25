@@ -166,7 +166,7 @@ void pulseOutputLines(uint8_t lines) {
     writeCommandRegister(0xF0 + lines, 0);
 }
 
-static void keyboardHandler(interrupt_frame_t* frame) {
+static void keyboardHandler(InterruptFrame* frame) {
     char x[20];
     term_write("Handling interrupt\n", 20);
     uint8_t scan_code = readDataPort();
@@ -178,7 +178,7 @@ static void keyboardHandler(interrupt_frame_t* frame) {
 
 void initKeyboard() {
     char x[20];
-    register_interrupt_handler(33, keyboardHandler);    
+    register_interrupt_handler(33, &keyboardHandler);
 
     // TODO: Initalise USB Controllers
     

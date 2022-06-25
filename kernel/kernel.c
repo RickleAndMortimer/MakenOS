@@ -215,6 +215,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("results done\n", 14);
 
     // Initialize devices
+    initKeyboard();
+    remapPIC(0x20, 0x28);
     initIdt();
     enableAPIC();
     enableKeyboard(ioapics[0]->address);
