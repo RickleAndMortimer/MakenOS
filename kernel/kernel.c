@@ -7,6 +7,8 @@
 #include <idt.h>
 #include <ps2.h>
 #include <madt.h>
+#include <ioapic.h>
+#include <apic.h>
 
 extern RSDPDescriptor20 *rsdp_descriptor;
 extern XSDT* xsdt;
@@ -193,6 +195,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("my results\n", 12);
     printNumber(madt->header.length, x);
     printNumber(madt->APIC_address, x);
+    printNumber(ioapics[0]->global_system_interrupt_base, x);
     for (uint8_t i = 0; i < 5; i++) {
 	term_write("IOAPIC\n", 7);
         printNumber(ioapic_source_overrides[i]->bus_source, x);
@@ -212,10 +215,10 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("results done\n", 14);
 
     // Initialize devices
-    initKeyboard();
     initIdt();
     enableAPIC();
-    enableAPICTimer(5000);
+    enableKeyboard(ioapics[0]->address);
+    // enableAPICTimer(5000);
     for (;;) {
 	asm volatile ("hlt");
     }

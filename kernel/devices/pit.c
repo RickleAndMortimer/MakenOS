@@ -8,6 +8,7 @@ uint32_t frequency = 1193180;
 static isr_t PIT_callback(interrupt_frame_t* frame)
 {
     // Do something here
+    term_write(".", 1);
 }
 
 void initPIT(uint32_t new_frequency)
@@ -36,7 +37,8 @@ void initPIT(uint32_t new_frequency)
     clearMaskIRQ(0);
 }
 
-uint32_t PIT_sleep(uint64_t milliseconds) {
+uint32_t PIT_sleep(uint64_t milliseconds) 
+{
     uint32_t ticks = 0;
 
     while (ticks <= (frequency / 1000 * milliseconds)) {

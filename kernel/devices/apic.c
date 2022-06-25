@@ -190,18 +190,3 @@ void enableAPICTimer(uint32_t frequency) {
 
     register_interrupt_handler(32, APIC_timer_callback);
 }
-
-// IOAPIC
-uint32_t cpuReadIOAPIC(void *ioapicaddr, uint32_t reg)
-{
-    uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
-    ioapic[0] = (reg & 0xFF);
-    return ioapic[4];
-}
- 
-void cpuWriteIOAPIC(void *ioapicaddr, uint32_t reg, uint32_t value)
-{
-    uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
-    ioapic[0] = (reg & 0xFF);
-    ioapic[4] = value;
-}
