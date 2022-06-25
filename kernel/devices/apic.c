@@ -2,6 +2,7 @@
 #include <apic.h>
 #include <kernel.h>
 #include <pic.h>
+#include <pit.h>
 #include <isr.h>
 #include <stdint.h>
 
@@ -166,6 +167,7 @@ void enableAPIC(void) {
 static isr_t APIC_timer_callback(interrupt_frame_t* frame)
 {
     // do timer stuff
+    term_write(".", 1);
 }
 
 void enableAPICTimer(uint32_t frequency) {
@@ -175,13 +177,10 @@ void enableAPICTimer(uint32_t frequency) {
     writeAPICRegister(0x380, 0xFFFFFFFF);
     // Sleep for 10 ms
     term_write("Calibrating APIC Timer\n", 24);
-    PIT_sleep(10);
+    PIT_sleep(5000);
     term_write("Finished Calibration\n", 22);
     // Mask APIC Timer interrupt
     writeAPICRegister(0x320, 0x10000);
-    // Disable PIT
-    my_outb(0x43, 0);
-    setMaskIRQ(0);
     // Reinitialize APIC timer with calculated APIC ticks
     uint32_t apic_ticks = 0xFFFFFFFF - readAPICRegister(0x390);
 
@@ -190,7 +189,6 @@ void enableAPICTimer(uint32_t frequency) {
     writeAPICRegister(0x380, apic_ticks);
 
     register_interrupt_handler(32, APIC_timer_callback);
-    clearMaskIRQ(0);
 }
 
 // IOAPIC

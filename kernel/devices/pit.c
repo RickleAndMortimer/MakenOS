@@ -41,6 +41,7 @@ uint32_t PIT_sleep(uint64_t milliseconds) {
 
     while (ticks <= (frequency / 1000 * milliseconds)) {
 	ticks++;
+	asm ("hlt");
     }
     return ticks;
 }
