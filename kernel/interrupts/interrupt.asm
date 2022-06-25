@@ -91,30 +91,15 @@ irq_common_stub:
     add rsp, 0x10
     iretq
 
-%macro irq_stub 2
-irq_stub_%+%1:
+%assign i 32
+%rep 	223
+irq_stub_%+i:
     cli
     push 0
-    push %2
+    push i
     jmp irq_common_stub
-%endmacro
-
-irq_stub 0, 32
-irq_stub 1, 33
-irq_stub 2, 34
-irq_stub 3, 35
-irq_stub 4, 36
-irq_stub 5, 37
-irq_stub 6, 38
-irq_stub 7, 39
-irq_stub 8, 40
-irq_stub 9, 41
-irq_stub 10, 42
-irq_stub 11, 43
-irq_stub 12, 44
-irq_stub 13, 45
-irq_stub 14, 46
-irq_stub 15, 47
+    %assign i i+1
+%endrep
 
 global isr_stub_table
 isr_stub_table:
@@ -126,8 +111,8 @@ isr_stub_table:
 
 global irq_stub_table
 irq_stub_table:
-%assign i 0
-%rep 	16
+%assign i 32
+%rep 	223
     DQ irq_stub_%+i
     %assign i i+1
 %endrep

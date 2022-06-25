@@ -1,13 +1,14 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <stivale2.h>
-#include <pit.h>
 #include <apic.h>
-#include <isr.h>
-#include <pic.h>
 #include <idt.h>
-#include <ps2.h>
+#include <ioapic.h>
 #include <madt.h>
+#include <pic.h>
+#include <pit.h>
+#include <print.h>
+#include <ps2.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stivale2.h>
 
 extern RSDPDescriptor20 *rsdp_descriptor;
 extern XSDT* xsdt;
@@ -67,6 +68,19 @@ static struct stivale2_header_tag_framebuffer framebuffer_hdr_tag = {
     .framebuffer_height = 0,
     .framebuffer_bpp    = 0
 };
+static struct stivale2_header_tag_smp smp_hdr_tag = {
+    // Same as above.
+    .tag = {
+        .identifier = STIVALE2_HEADER_TAG_SMP_ID,
+        // Instead of 0, we now point to the previous header tag. The order in
+        // which header tags are linked does not matter.
+        .next = (uint64_t)&framebuffer_hdr_tag
+    },
+    // We set all the framebuffer specifics to 0 as we want the bootloader
+    // to pick the best it can.
+    .flags = 0
+};
+
 
 // The stivale2 specification says we need to define a "header structure".
 // This structure needs to reside in the .stivale2hdr ELF section in order
@@ -95,7 +109,7 @@ static struct stivale2_header stivale_hdr = {
     .flags = (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
     // This header structure is the root of the linked list of header tags and
     // points to the first one in the linked list.
-    .tags = (uintptr_t)&framebuffer_hdr_tag
+    .tags = (uintptr_t)&smp_hdr_tag
 };
 
 // Scan for tags in linked list
@@ -150,7 +164,6 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // We should now be able to call the above function pointer to print out
     // a simple "Hello World" to screen.
     term_write("Hello World\n", 13);
-    initKeyboard();
     char x[20];
     // start accessing XSDT/RSDT entries
     printNumber(rsdp_tag->rsdp, x);
@@ -182,6 +195,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("my results\n", 12);
     printNumber(madt->header.length, x);
     printNumber(madt->APIC_address, x);
+    printNumber(ioapics[0]->global_system_interrupt_base, x);
     for (uint8_t i = 0; i < 5; i++) {
 	term_write("IOAPIC\n", 7);
         printNumber(ioapic_source_overrides[i]->bus_source, x);
@@ -201,11 +215,11 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("results done\n", 14);
 
     // Initialize devices
-    // initTimer(50000);
-    initKeyboard();
-    enableAPIC();
-    enableAPICTimer();
+    remapPIC(0x20, 0x28);
     initIdt();
+    enableAPIC();
+    enableAPICTimer(5000);
+    enableKeyboard(ioapics[0]->address);
     for (;;) {
 	asm volatile ("hlt");
     }

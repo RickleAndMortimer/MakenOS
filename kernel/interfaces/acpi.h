@@ -1,6 +1,7 @@
 #include <stdint.h>
 
-typedef struct  {
+typedef struct  
+{
     char signature[8];
     uint8_t checksum;
     char OEM_id[6];
@@ -8,7 +9,8 @@ typedef struct  {
     uint32_t rsdt_address;
 } __attribute__ ((packed)) RSDPDescriptor;
 
-typedef struct {
+typedef struct RSDPDescriptor20
+{
     RSDPDescriptor descriptor10;
     uint32_t length;
     uint64_t xsdt_address;
@@ -16,7 +18,8 @@ typedef struct {
     uint8_t reserved[3];
 } __attribute__ ((packed)) RSDPDescriptor20;
 
-typedef struct {
+typedef struct ACPISDTHeader
+{
     char signature[4];
     uint32_t length;
     uint8_t revision;
@@ -29,12 +32,14 @@ typedef struct {
 } __attribute__ ((packed)) ACPISDTHeader;
 
 // uint64_t other_SDT[(h.Length - sizeof(h)) / 8];
-typedef struct {
+typedef struct RSDT
+{
     ACPISDTHeader h;
     uint32_t other_SDT[];
 } __attribute__ ((packed)) RSDT;
 
-typedef struct {
+typedef struct XSDT
+{
     ACPISDTHeader h;
     uint64_t other_SDT[];
 } __attribute__ ((packed)) XSDT;

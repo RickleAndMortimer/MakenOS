@@ -6,11 +6,13 @@
 
 FADT* fadt;
 
-void initFADT() {
+void initFADT() 
+{
     fadt = (FADT*) findHeader("FACP");
 }
 
-void enableACPI() {
+void enableACPI() 
+{
     my_outb(fadt->SMI_command_port, fadt->ACPI_enable);
     // Poll PM1a control block until it is clear
     while ((my_inw(fadt->PM1a_control_block) & 1) == 0);

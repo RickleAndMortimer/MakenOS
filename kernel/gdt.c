@@ -1,9 +1,10 @@
 #include <stdint.h>
 #include <gdt.h>
 
-segment_descriptor_t entries[6];
+SegmentDescriptor entries[6];
 
-void setGdtEntry(segment_descriptor_t *entry, uint32_t base, uint8_t flags, uint8_t access_byte, uint16_t limit) {
+void setGdtEntry(SegmentDescriptor *entry, uint32_t base, uint8_t flags, uint8_t access_byte, uint16_t limit) 
+{
     entry->base = base >> 24;
     entry->base_high = base >> 16 & 0xFF;
     entry->base_low = base & 0xFFFF;
@@ -12,7 +13,8 @@ void setGdtEntry(segment_descriptor_t *entry, uint32_t base, uint8_t flags, uint
     entry->limit_low = limit;
 }
 
-void setSystemEntry(segment_descriptor_t *entry_1, segment_descriptor_t *entry_2, uint64_t base, uint8_t flags, uint8_t access_byte, uint16_t limit) {
+void setSystemEntry(SegmentDescriptor *entry_1, SegmentDescriptor *entry_2, uint64_t base, uint8_t flags, uint8_t access_byte, uint16_t limit) 
+{
     entry_1->base = 0; 
     entry_1->flags = 0; 
     entry_1->access_byte = 0; 
@@ -28,7 +30,8 @@ void setSystemEntry(segment_descriptor_t *entry_1, segment_descriptor_t *entry_2
     entry_2->limit_low = limit; 
 } 
 
-void initGDT() {
+void initGDT() 
+{
     setGdtEntry(&entries[0], 0, 0, 0, 0);
     setGdtEntry(&entries[1], 0, 0xCF, 0x9A, 0xFFFF);
     setGdtEntry(&entries[2], 0, 0xCF, 0x92, 0xFFFF);
