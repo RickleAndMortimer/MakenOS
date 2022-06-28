@@ -113,7 +113,8 @@ static struct stivale2_header stivale_hdr = {
 };
 
 // Scan for tags in linked list
-void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
+void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) 
+{
     struct stivale2_tag *current_tag = (void *)stivale2_struct->tags;
     for (;;) {
         if (current_tag == NULL) {
@@ -141,13 +142,15 @@ void _start(struct stivale2_struct *stivale2_struct) {
     struct stivale2_struct_tag_smp* smp_tag;
     smp_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_SMP_ID);
     // Check if the tags were actually found.
-    if (term_str_tag == NULL) {
+    if (term_str_tag == NULL) 
+    {
         for (;;) {
             asm ("hlt");
         }
     }
 
-    if (rsdp_tag == NULL) {
+    if (rsdp_tag == NULL) 
+    {
         for (;;) {
             asm ("hlt");
         }
@@ -169,12 +172,14 @@ void _start(struct stivale2_struct *stivale2_struct) {
     printNumber(rsdp_tag->rsdp, x);
 
     rsdp_descriptor = (RSDPDescriptor20*) rsdp_tag->rsdp;
-    if (rsdp_descriptor->descriptor10.revision == 2) {
+    if (rsdp_descriptor->descriptor10.revision == 2) 
+    {
 	xsdt = (XSDT*)rsdp_descriptor->xsdt_address;
     }
     rsdt = (RSDT*)(uintptr_t)rsdp_descriptor->descriptor10.rsdt_address;
 
-    if ((validateRSDPChecksum() & 0xFF) == 0) {
+    if ((validateRSDPChecksum() & 0xFF) == 0) 
+    {
 	term_write("ACPI ready to go\n", 18);
 	printNumber(rsdp_descriptor->descriptor10.revision, x);
     }
@@ -196,7 +201,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
     printNumber(madt->header.length, x);
     printNumber(madt->APIC_address, x);
     printNumber(ioapics[0]->global_system_interrupt_base, x);
-    for (uint8_t i = 0; i < 5; i++) {
+    for (uint8_t i = 0; i < 5; i++) 
+    {
 	term_write("IOAPIC\n", 7);
         printNumber(ioapic_source_overrides[i]->bus_source, x);
         printNumber(ioapic_source_overrides[i]->IRQ_source, x);
@@ -218,9 +224,27 @@ void _start(struct stivale2_struct *stivale2_struct) {
     remapPIC(0x20, 0x28);
     initIdt();
     enableAPIC();
-    enableAPICTimer(5000);
-    enableKeyboard(ioapics[0]->address);
-    for (;;) {
+    //enableAPICTimer(5000);
+    //enableKeyboard(ioapics[0]->address);
+    
+    struct stivale2_struct_tag_memmap* memmap_tag;
+    memmap_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+
+    for (size_t i = 0; i < memmap_tag->entries; i++) {
+	if (memmap_tag->memmap[i].type == 1 || memmap_tag->memmap[i].type == 0x1000) {
+	    term_write("Entry ", 6);
+	    printNumber(i, x);
+	    term_write("Type ", 5);
+	    printNumber(memmap_tag->memmap[i].type, x);
+	    term_write("Base ", 5);
+	    printNumber(memmap_tag->memmap[i].base, x);
+	    term_write("Length ", 7);
+	    printNumber(memmap_tag->memmap[i].length, x);
+	}
+    }
+
+    for (;;) 
+    {
 	asm volatile ("hlt");
     }
 }
