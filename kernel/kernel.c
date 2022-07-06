@@ -2,6 +2,7 @@
 #include <idt.h>
 #include <ioapic.h>
 #include <madt.h>
+#include <paging.h>
 #include <pic.h>
 #include <pit.h>
 #include <print.h>
@@ -25,6 +26,7 @@ extern x2LAPIC* x2_lapics[];
 
 // Write to console function shared amongst the codebase
 void (*term_write)(const char *string, size_t length);
+struct stivale2_struct_tag_memmap* memmap_tag;
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an array in .bss.
@@ -226,23 +228,12 @@ void _start(struct stivale2_struct *stivale2_struct) {
     enableAPIC();
     //enableAPICTimer(5000);
     //enableKeyboard(ioapics[0]->address);
-    
-    struct stivale2_struct_tag_memmap* memmap_tag;
     memmap_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+    printMemoryMaps();
 
-    for (size_t i = 0; i < memmap_tag->entries; i++) {
-	if (memmap_tag->memmap[i].type == 1 || memmap_tag->memmap[i].type == 0x1000) {
-	    term_write("Entry ", 6);
-	    printNumber(i, x);
-	    term_write("Type ", 5);
-	    printNumber(memmap_tag->memmap[i].type, x);
-	    term_write("Base ", 5);
-	    printNumber(memmap_tag->memmap[i].base, x);
-	    term_write("Length ", 7);
-	    printNumber(memmap_tag->memmap[i].length, x);
-	}
-    }
-
+    uint64_t helo[] = {1, 2, 3, 4, 5, 6, 7, 8};
+    allocatePhysicalMemory(memmap_tag->memmap[0].base, memmap_tag->memmap[0].length, helo, sizeof(helo));
+    
     for (;;) 
     {
 	asm volatile ("hlt");

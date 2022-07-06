@@ -9,6 +9,20 @@ size_t strlen(char* s)
     return len;
 }
 
+char strcmp(const char* str1, const char* str2)
+{
+    uint64_t i = 0;
+    while (str1[i] != '\0' || str2[i] != '\0')
+    {
+        if (str1[i] != str2[i])
+        {
+            return str1[i] - str2[i];
+        }
+        i++;
+    }
+    return 0;
+}
+
 void* memset(void* ptr, int value, size_t num) 
 {
     uint8_t* k = ptr;
