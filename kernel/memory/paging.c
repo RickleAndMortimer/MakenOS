@@ -32,22 +32,22 @@ void* getPhysicalAddress(void* virtual_address)
     if (pml4.entries[pml4_index].present) {
 	// TODO: handle not present entries
     }
-    PageTable* page_directory_pointer = (PageTable*) (pml4.entries[pml4_index].physical_address);
+    PageTable* page_directory_pointer = (PageTable*) (uint64_t) (pml4.entries[pml4_index].physical_address);
 
     if (page_directory_pointer->entries[page_directory_pointer_index].present) {
 
     }
-    PageTable* page_directory = (PageTable*) (page_directory_pointer->entries[page_directory_pointer_index].physical_address);
+    PageTable* page_directory = (PageTable*) ((uint64_t) (page_directory_pointer->entries[page_directory_pointer_index].physical_address) << 3);
 
     if (page_directory->entries[page_directory_index].present) {
 	
     } 
-    PageTable* page_table = (PageTable*) (page_directory->entries[page_directory_index].physical_address);
+    PageTable* page_table = (PageTable*) ((uint64_t) (page_directory->entries[page_directory_index].physical_address) << 3);
 
     if (page_table->entries[page_table_index].present) {
 
     }
-    return (void*) (page_table->entries[page_table_index].physical_address + offset);
+    return (void*) (page_table->entries[page_table_index].physical_address << 3 + offset);
 }
 
 void mapPage(void* physical_address, void* virtual_address, uint8_t flags, uint16_t available) 
@@ -61,9 +61,9 @@ void mapPage(void* physical_address, void* virtual_address, uint8_t flags, uint1
     uint64_t page_directory_pointer_index = (virtual_address_int >> 30) & 0x1FF;
     uint64_t pml4_index = (virtual_address_int >> 39) & 0x1FF;
  
-    PageTable* page_directory_pointer = (PageTable*) (pml4.entries[pml4_index].physical_address);
-    PageTable* page_directory = (PageTable*) (page_directory_pointer->entries[page_directory_pointer_index].physical_address);
-    PageTable* page_table = (PageTable*) (page_directory->entries[page_directory_index].physical_address);
+    PageTable* page_directory_pointer = (PageTable*) (uint64_t) (pml4.entries[pml4_index].physical_address);
+    PageTable* page_directory = (PageTable*) (uint64_t) (page_directory_pointer->entries[page_directory_pointer_index].physical_address);
+    PageTable* page_table = (PageTable*) (uint64_t) (page_directory->entries[page_directory_index].physical_address);
 
     setPageTableEntry(&(page_table->entries[page_table_index]), flags, physical_address_int, available);
 
