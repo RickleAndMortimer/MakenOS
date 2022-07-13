@@ -29,4 +29,5 @@ typedef struct PageTable {
 } PageTable;
 
 void* getPhysicalAddress(void* virtual_address); 
+PageTable* initPML4(void); 
 void mapPage(void* physical_address, void* virtual_address, uint8_t flags, uint16_t available);

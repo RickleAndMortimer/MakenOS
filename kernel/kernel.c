@@ -5,6 +5,7 @@
 #include <paging.h>
 #include <pic.h>
 #include <pit.h>
+#include <pmm.h>
 #include <print.h>
 #include <ps2.h>
 #include <stddef.h>
@@ -229,13 +230,15 @@ void _start(struct stivale2_struct *stivale2_struct) {
     //enableAPICTimer(5000);
     //enableKeyboard(ioapics[0]->address);
     memmap_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
-    printMemoryMaps();
 
-    uint64_t helo[] = {1, 2, 3, 4, 5, 6, 7, 8};
-    allocatePhysicalMemory(memmap_tag->memmap[0].base, memmap_tag->memmap[0].length, helo, sizeof(helo));
-    
+	PageTable* pml4 = initPML4();
+	printNumber(pml4->entries[0].physical_address, x);
+	printMemoryMaps();
+	
+	PageTable* p = getPhysicalAddress(0x1);
+	printNumber((uint64_t)p, x);
     for (;;) 
     {
-	asm volatile ("hlt");
+		asm volatile ("hlt");
     }
 }
