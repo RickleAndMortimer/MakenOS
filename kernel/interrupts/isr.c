@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <kernel.h>
 #include <isr.h>
+#include <paging.h>
 #include <print.h>
 #include <pic.h>
 #include <stdint.h>
@@ -30,11 +31,6 @@ void exception_handler(InterruptFrame* frame) {
 			uint64_t cr2 = getCR2();
 			printNumber(cr2, x);
 			term_write("dead :(", 7);
-			for (;;) 
-			{
-				asm volatile ("hlt");
-			}
-			
 			break;
 	}
 }

@@ -232,11 +232,13 @@ void _start(struct stivale2_struct *stivale2_struct) {
     memmap_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
 	PageTable* pml4 = initPML4();
-	printNumber(pml4->entries[0].physical_address, x);
 	printMemoryMaps();
-	
-	PageTable* p = getPhysicalAddress(0x1);
+	setMemoryMap(4);
+	mapPage(0x7654321, 0x1, 0b111);
+	uint64_t* p = getPhysicalAddress((void*) 0x7654321);
+	uint64_t* y = (uint64_t*)0x7654321;
 	printNumber((uint64_t)p, x);
+	*y = 10;
     for (;;) 
     {
 		asm volatile ("hlt");

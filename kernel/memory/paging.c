@@ -6,6 +6,11 @@
 static PageTable* pml4;
 extern struct stivale2_mmap_entry* memmap;
 
+static inline void flushTLB(void* page) 
+{
+	asm volatile ("invlpg (%0)" :: "r" (page) : "memory");
+}
+
 static inline uint64_t readCR3(void)
 {
     uint64_t val;
@@ -13,7 +18,8 @@ static inline uint64_t readCR3(void)
     return val;
 }
 
-PageTable* initPML4() {
+PageTable* initPML4() 
+{
 	uintptr_t cr3 = (uintptr_t) readCR3();
 	pml4 = (PageTable*) ((cr3 >> 12) << 12);
 
@@ -44,51 +50,56 @@ void* getPhysicalAddress(void* virtual_address)
     uint64_t page_directory_index = (address >> 21) & 0x1FF;
     uint64_t page_directory_pointer_index = (address >> 30) & 0x1FF;
     uint64_t pml4_index = (address >> 39) & 0x1FF;
-	char x[20];
 
-    // Check if entry is present in memory
-    if (pml4->entries[pml4_index].present) {
-	// TODO: handle not present entries
-    }
-    PageTable* page_directory_pointer = (PageTable*) (uint64_t) (pml4->entries[pml4_index].physical_address);
-	printNumber((uint64_t) page_directory_pointer, x);
+    PageTable* page_directory_pointer = (PageTable*) ((uint64_t) (pml4->entries[pml4_index].physical_address) << 12);
+    PageTable* page_directory = (PageTable*) ((uint64_t) (page_directory_pointer->entries[page_directory_pointer_index].physical_address) << 12);
+    PageTable* page_table = (PageTable*) ((uint64_t) (page_directory->entries[page_directory_index].physical_address) << 12);
 
-    if (page_directory_pointer->entries[page_directory_pointer_index].present) {
-
-    }
-    PageTable* page_directory = (PageTable*) ((uint64_t) (page_directory_pointer->entries[page_directory_pointer_index].physical_address) << 3);
-
-    if (page_directory->entries[page_directory_index].present) {
-	
-    } 
-    PageTable* page_table = (PageTable*) ((uint64_t) (page_directory->entries[page_directory_index].physical_address) << 3);
-	printNumber((uint64_t) page_table, x);
-
-    if (page_table->entries[page_table_index].present) {
-
-    }
-	printNumber((uint64_t) (page_table->entries[page_table_index].physical_address << 3) + offset, x);
-    return (void*) ((page_table->entries[page_table_index].physical_address << 3) + offset);
+    return (void*) ((page_table->entries[page_table_index].physical_address << 12) + offset);
 }
 
-void mapPage(void* physical_address, void* virtual_address, uint8_t flags, uint16_t available) 
+static void allocateEntry(PageTable* table, size_t index, uint8_t flags)
+{
+	uint64_t* base = getMemoryMapBase();
+	uint64_t* map_length = getMemoryMapLength();
+
+	void* physical_address = allocatePhysicalMemory(base, map_length, 4096);
+	setPageTableEntry(&(table->entries[index]), flags, (uintptr_t) physical_address, 0);
+}
+
+
+void mapPage(void* virtual_address, void* physical_address, uint8_t flags) 
 {
     // Make sure that both addresses are page-aligned.
     uintptr_t virtual_address_int = (uintptr_t) virtual_address;
-    uintptr_t physical_address_int = (uintptr_t) physical_address;
+    uintptr_t physical_address_int = (uintptr_t) virtual_address;
 
     uint64_t pml4_index = (virtual_address_int >> 39) & 0x1FF;
     uint64_t page_directory_pointer_index = (virtual_address_int >> 30) & 0x1FF;
     uint64_t page_directory_index = (virtual_address_int >> 21) & 0x1FF;
     uint64_t page_table_index = (virtual_address_int >> 12) & 0x1FF;
  
+	if (!pml4->entries[pml4_index].present)
+	{
+		allocateEntry(pml4, pml4_index, flags);
+	}
     PageTable* page_directory_pointer = (PageTable*) (uint64_t) (pml4->entries[pml4_index].physical_address);
+
+	if (!page_directory_pointer->entries[page_directory_pointer_index].present) 
+	{
+		allocateEntry(page_directory_pointer, page_directory_pointer_index, flags);
+	}
     PageTable* page_directory = (PageTable*) (uint64_t) (page_directory_pointer->entries[page_directory_pointer_index].physical_address);
+
+	if (!page_directory->entries[page_directory_index].present) 
+	{
+		allocateEntry(page_directory, page_directory_index, flags);
+	}
     PageTable* page_table = (PageTable*) (uint64_t) (page_directory->entries[page_directory_index].physical_address);
 
-    setPageTableEntry(&(page_table->entries[page_table_index]), flags, physical_address_int, available);
-
+	setPageTableEntry(&page_table->entries[page_table_index], flags, physical_address_int, 0);
+	
     // Now you need to flush the entry in the TLB
-
+	flushTLB((uint64_t) virtual_address);
 }
 

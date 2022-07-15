@@ -7,7 +7,7 @@
 
 #define MAX_SIZE 4096
 extern struct stivale2_struct_tag_memmap* memmap_tag;
-static struct stivale2_mmap_entry* memmap;
+static struct stivale2_mmap_entry memmap;
 
 void printMemoryMaps() 
 {
@@ -28,6 +28,21 @@ void printMemoryMaps()
 			break;
 		}
     }
+}
+
+void setMemoryMap(uint8_t selection) 
+{
+	memmap = memmap_tag->memmap[selection]; 
+}
+
+void* getMemoryMapBase() 
+{
+	return (void*) memmap.base;
+}
+
+uint64_t getMemoryMapLength()
+{
+	return memmap.length;
 }
 
 uint64_t* allocatePhysicalMemory(uint64_t* base, size_t length, size_t allocation_size) 
