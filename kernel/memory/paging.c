@@ -56,7 +56,7 @@ void* getPhysicalAddress(void* virtual_address)
     PageTable* page_directory = (PageTable*) ((uint64_t) (page_directory_pointer->entries[page_directory_pointer_index].physical_address) << 12);
     PageTable* page_table = (PageTable*) ((uint64_t) (page_directory->entries[page_directory_index].physical_address) << 12);
 
-    printNumber(page_table->entries[page_table_index].physical_address << 12, x);
+    printNumber(page_table->entries[page_table_index].physical_address, x);
 
     return (void*) (page_table->entries[page_table_index].physical_address);
 }
@@ -65,7 +65,7 @@ static void allocateEntry(PageTable* table, size_t index, uint8_t flags)
 {
     uint64_t* base = getMemoryMapBase();
     uint64_t* map_length = getMemoryMapLength();
-    void* physical_address = allocatePhysicalMemory(base, map_length, 4096);
+    void* physical_address = malloc(4096);
     setPageTableEntry(&(table->entries[index]), flags, (uintptr_t) physical_address >> 12, 0);
 }
 

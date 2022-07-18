@@ -223,12 +223,6 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
     term_write("results done\n", 14);
 
-    // Initialize devices
-    remapPIC(0x20, 0x28);
-    initIdt();
-    enableAPIC();
-    //enableAPICTimer(5000);
-    //enableKeyboard(ioapics[0]->address);
     memmap_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
     PageTable* pml4 = initPML4();
@@ -238,8 +232,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
     uint64_t* p = getPhysicalAddress((void*) 0x9000);
     uint64_t* f = getPhysicalAddress((void*) 0xA000);
 
-    mapPage(0x9000, 0x1000, 3);
-    mapPage(0xA000, 0x1000, 3);
+    mapPage(p, 0x1000, 3);
+    mapPage(f, 0x1000, 3);
 
     p = getPhysicalAddress((void*) 0x9000);
     f = getPhysicalAddress((void*) 0xA000);
@@ -249,6 +243,13 @@ void _start(struct stivale2_struct *stivale2_struct) {
     printNumber(*y, x);
     uint64_t* z = (uint64_t*) 0xA000;
     printNumber(*z, x);
+
+    // Initialize devices
+    remapPIC(0x20, 0x28);
+    initIdt();
+    enableAPIC();
+    enableAPICTimer(10000);
+    enableKeyboard(ioapics[0]->address);
 
     for (;;) 
     {

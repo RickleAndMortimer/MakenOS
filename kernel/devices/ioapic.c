@@ -3,6 +3,7 @@
 #include <isr.h>
 #include <kernel.h>
 #include <pic.h>
+#include <ps2.h>
 #include <print.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -23,8 +24,9 @@ void writeIOAPIC(size_t ioapicaddr, uint32_t reg, uint32_t value)
 
 static void keyboardHandler(InterruptFrame* frame) 
 {
+    char x[20];
+    printNumber(readDataPort(), x);
     writeAPICRegister(0xB0, 0);
-    term_write(".", 1);
 }
 
 void readIOREDTBLs(size_t ioapicaddr) 

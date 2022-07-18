@@ -170,7 +170,6 @@ static void APIC_timer_callback(InterruptFrame* frame)
 {
     // do timer stuff
     writeAPICRegister(0xB0, 0);
-    term_write("x", 1);
 }
 
 void enableAPICTimer(uint32_t frequency) 
