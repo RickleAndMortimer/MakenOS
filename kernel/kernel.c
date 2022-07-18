@@ -2,8 +2,10 @@
 #include <idt.h>
 #include <ioapic.h>
 #include <madt.h>
+#include <paging.h>
 #include <pic.h>
 #include <pit.h>
+#include <pmm.h>
 #include <print.h>
 #include <ps2.h>
 #include <stddef.h>
@@ -25,6 +27,7 @@ extern x2LAPIC* x2_lapics[];
 
 // Write to console function shared amongst the codebase
 void (*term_write)(const char *string, size_t length);
+struct stivale2_struct_tag_memmap* memmap_tag;
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an array in .bss.
@@ -113,7 +116,8 @@ static struct stivale2_header stivale_hdr = {
 };
 
 // Scan for tags in linked list
-void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
+void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) 
+{
     struct stivale2_tag *current_tag = (void *)stivale2_struct->tags;
     for (;;) {
         if (current_tag == NULL) {
@@ -141,13 +145,15 @@ void _start(struct stivale2_struct *stivale2_struct) {
     struct stivale2_struct_tag_smp* smp_tag;
     smp_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_SMP_ID);
     // Check if the tags were actually found.
-    if (term_str_tag == NULL) {
+    if (term_str_tag == NULL) 
+    {
         for (;;) {
             asm ("hlt");
         }
     }
 
-    if (rsdp_tag == NULL) {
+    if (rsdp_tag == NULL) 
+    {
         for (;;) {
             asm ("hlt");
         }
@@ -169,12 +175,14 @@ void _start(struct stivale2_struct *stivale2_struct) {
     printNumber(rsdp_tag->rsdp, x);
 
     rsdp_descriptor = (RSDPDescriptor20*) rsdp_tag->rsdp;
-    if (rsdp_descriptor->descriptor10.revision == 2) {
+    if (rsdp_descriptor->descriptor10.revision == 2) 
+    {
 	xsdt = (XSDT*)rsdp_descriptor->xsdt_address;
     }
     rsdt = (RSDT*)(uintptr_t)rsdp_descriptor->descriptor10.rsdt_address;
 
-    if ((validateRSDPChecksum() & 0xFF) == 0) {
+    if ((validateRSDPChecksum() & 0xFF) == 0) 
+    {
 	term_write("ACPI ready to go\n", 18);
 	printNumber(rsdp_descriptor->descriptor10.revision, x);
     }
@@ -196,7 +204,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
     printNumber(madt->header.length, x);
     printNumber(madt->APIC_address, x);
     printNumber(ioapics[0]->global_system_interrupt_base, x);
-    for (uint8_t i = 0; i < 5; i++) {
+    for (uint8_t i = 0; i < 5; i++) 
+    {
 	term_write("IOAPIC\n", 7);
         printNumber(ioapic_source_overrides[i]->bus_source, x);
         printNumber(ioapic_source_overrides[i]->IRQ_source, x);
@@ -214,13 +223,36 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
     term_write("results done\n", 14);
 
+    memmap_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+
+    PageTable* pml4 = initPML4();
+    printMemoryMaps();
+    setMemoryMap(4);
+
+    uint64_t* p = getPhysicalAddress((void*) 0x9000);
+    uint64_t* f = getPhysicalAddress((void*) 0xA000);
+
+    mapPage(p, 0x1000, 3);
+    mapPage(f, 0x1000, 3);
+
+    p = getPhysicalAddress((void*) 0x9000);
+    f = getPhysicalAddress((void*) 0xA000);
+
+    uint64_t* y = (uint64_t*)0x9000;
+    *y = 10;
+    printNumber(*y, x);
+    uint64_t* z = (uint64_t*) 0xA000;
+    printNumber(*z, x);
+
     // Initialize devices
     remapPIC(0x20, 0x28);
     initIdt();
     enableAPIC();
-    enableAPICTimer(5000);
+    enableAPICTimer(10000);
     enableKeyboard(ioapics[0]->address);
-    for (;;) {
-	asm volatile ("hlt");
+
+    for (;;) 
+    {
+		asm volatile ("hlt");
     }
 }
