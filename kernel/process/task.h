@@ -1,21 +1,27 @@
 #include <stdint.h>
 
-typedef struct Task 
+typedef struct Register
 {
-	uint64_t cs, ds, fs, gs; 
-	// General purpose registers
 	uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp;
 	uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
 	uint64_t rflags; 
+	uint64_t rip; 
 	uint64_t cr3;
+}__attribute__((packed)) Register;
+
+typedef struct Task 
+{
+	Register regs;
+	uint64_t cs, ds, fs, gs; 
+	// General purpose registers
 	uint64_t state;
 	uint64_t ldtr;
 	uint64_t io_map_address, io_map;
 	// Stack pointers
 	uint64_t sp0, sp1, sp2;
-	Task* prev;
 	uint64_t ssp_state;
-} Task;
+	struct Task* next;
+}__attribute__((packed)) Task;
 
 typedef struct TSSDescriptor {
 	uint16_t limit1;
@@ -28,7 +34,7 @@ typedef struct TSSDescriptor {
 	uint8_t base3;
 	uint32_t base4;
 	uint32_t reserved;
-} TSSDescriptor
+} TSSDescriptor;
 
 typedef struct TSS 
 {

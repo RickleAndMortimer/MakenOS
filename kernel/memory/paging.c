@@ -11,7 +11,7 @@ static inline void flushTLB(void* page)
 	asm volatile ("invlpg (%0)" :: "r" (page) : "memory");
 }
 
-static inline uint64_t readCR3(void)
+uint64_t readCR3(void)
 {
     uint64_t val;
     asm volatile ( "mov %%cr3, %0" : "=r"(val) );
