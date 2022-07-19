@@ -6,7 +6,7 @@
 #define HEAP_END 4096
 
 
-void* kernel_malloc(size_t size) 
+void* malloc(size_t size) 
 {
 
 }

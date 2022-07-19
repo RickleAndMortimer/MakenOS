@@ -1,76 +1,55 @@
-%macro pushad 0
-    push rax      
-    push rcx
-    push rdx
-    push rdi
-    push rsi
-    push r8
-    push r9
-    push r10
-    push r11
-%endmacro
+global switchTask
+switchTask:
+	mov [rdi], rax ; Save state of the task
+	mov [rdi + 8], rbx
+	mov [rdi + 16], rcx
+	mov [rdi + 24], rdx
+	mov [rdi + 32], rsi
+	mov [rdi + 40], rdi
+	mov [rdi + 48], rsp
+	mov [rdi + 56], rbp
+	mov [rdi + 64], r8
+	mov [rdi + 72], r9
+	mov [rdi + 80], r10
+	mov [rdi + 88], r11
+	mov [rdi + 96], r12
+	mov [rdi + 104], r13
+	mov [rdi + 112], r14
+	mov [rdi + 120], r15
 
-%macro popad 0
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rsi
-    pop rdi
-    pop rdx      
-    pop rcx
-    pop rax
-%endmacro
+	pushfq ; Save RFLAGS
+	pop rcx
+	mov [rdi + 128], rcx
 
-global switch
-switch:
-	pushad
-	mov [rax], rax ; Save state of the task
-	mov [rax + 8], rbx
-	mov [rax + 16], rcx
-	mov [rax + 24], rdx
-	mov [rax + 32], rsi
-	mov [rax + 40], rdi
-	mov [rax + 48], rsp
-	mov [rax + 56], rbp
-	mov [rax + 64], r8
-	mov [rax + 72], r9
-	mov [rax + 80], r10
-	mov [rax + 88], r11
-	mov [rax + 96], r12
-	mov [rax + 104], r13
-	mov [rax + 112], r14
-	mov [rax + 120], r15
+	mov rcx, [rsp] ; Save RIP
+	mov [rdi + 136], rcx
+	push rcx
 
-	push rbx ; Save RFLAGS
-	pushfq
-	pop rbx
-	mov [rax + 128], rbx
-	pop rbx
+	mov rax, [rsi] ; Load the state of the next task
+	mov rbx, [rsi + 8]
+	mov rdx, [rsi + 24]
+	mov rdi, [rsi + 40]
+	mov r8, [rsi + 64]
+	mov r9, [rsi + 72]
+	mov r10, [rsi + 80]
+	mov r11, [rsi + 88]
+	mov r12, [rsi + 96]
+	mov r13, [rsi + 104]
+	mov r14, [rsi + 112]
+	mov r15, [rsi + 120]
 
-	mov [rax + 136], rip
-	mov [rax + 144], cr3
+	mov rcx, [rsi + 128]
 
-	mov rax, [rdx] ; Load the state of the next task
-	mov rbx, [rdx + 8]
-	mov rcx, [rdx + 16]
-	mov rdx, [rdx + 24]
-	mov rsi, [rdx + 32]
-	mov rdi, [rdx + 40]
-	mov r8, [rdx + 64]
-	mov r9, [rdx + 72]
-	mov r10, [rdx + 80]
-	mov r11, [rdx + 88]
-	mov r12, [rdx + 96]
-	mov r13, [rdx + 104]
-	mov r14, [rdx + 112]
-	mov r15, [rdx + 120]
+	push rcx ; Load RFLAGS
+	popfq
 
-	push [rdx + 128] ; Load RFLAGS
-	popf
+	mov rbp, [rsi + 56]	
+	mov rsp, [rsi + 48]
 
-	mov rip, [rdx + 136]
-	mov cr3, [rdx + 144]
-	mov rbp, [rdx + 56]
-	mov rdx, [rdx + 48]
+	mov rcx, [rsi + 136] ; Load new RIP
+	push rcx
+	mov rcx, [rsi + 16]
+
+	mov rsi, [rsi + 32]
+
 	ret

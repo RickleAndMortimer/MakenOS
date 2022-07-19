@@ -1,17 +1,17 @@
 #include <stdint.h>
 
-typedef struct Register
+typedef struct Registers
 {
 	uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp;
 	uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
 	uint64_t rflags; 
 	uint64_t rip; 
 	uint64_t cr3;
-}__attribute__((packed)) Register;
+}__attribute__((packed)) Registers;
 
 typedef struct Task 
 {
-	Register regs;
+	Registers regs;
 	uint64_t cs, ds, fs, gs; 
 	// General purpose registers
 	uint64_t state;
@@ -54,3 +54,6 @@ typedef struct TSS
 	uint16_t reserved4;	
 	uint16_t io_map_address;	
 }__attribute__((packed)) TSS;
+
+void doIt();
+void initTasking();
