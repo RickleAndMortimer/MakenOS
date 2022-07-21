@@ -11,6 +11,7 @@ static Task otherTask;
 
 extern PageTable pml4;
 extern void switchTask(Registers* from, Registers* to);
+extern void switchTask2(Registers* from, Registers* to);
  
 void yield() 
 {
@@ -22,7 +23,7 @@ void yield()
 void doIt() {
 	term_write("Switching to otherTask... \n", 27);
 	yield();
-	term_write("done\n", 5);
+	term_write("good\n",5);
 }
 
 void createTask(Task *task, void (*main)(), uint64_t flags, uint64_t cr3)
@@ -35,9 +36,8 @@ void createTask(Task *task, void (*main)(), uint64_t flags, uint64_t cr3)
     task->regs.rdi = 0;
     task->regs.rflags = flags;
     task->regs.rip = (uint64_t) main;
-    task->regs.cr3 = (uint64_t) cr3;
+    task->regs.cr3 = cr3;
     task->regs.rsp = (uint64_t) k_malloc(getMemoryMapBase(), getMemoryMapLength(), 4096) + 0x1000;
-	task->regs.rbp = task->regs.rsp;
     task->next = NULL;
 }
 
@@ -52,8 +52,8 @@ static void otherMain()
 void initTasking() 
 {
     // Get RFLAGS and CR3
-    asm volatile("mov %%cr3, %%rax; mov %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
-    asm volatile("pushfq; mov (%%rsp), %%eax; mov %%rax, %0; popfq;":"=m"(mainTask.regs.rflags)::"%rax");
+    asm volatile("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
+    asm volatile("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.rflags)::"%rax");
  
     createTask(&otherTask, otherMain, mainTask.regs.rflags, mainTask.regs.cr3);
     mainTask.next = &otherTask;

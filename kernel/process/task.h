@@ -12,14 +12,6 @@ typedef struct Registers
 typedef struct Task 
 {
 	Registers regs;
-	uint64_t cs, ds, fs, gs; 
-	// General purpose registers
-	uint64_t state;
-	uint64_t ldtr;
-	uint64_t io_map_address, io_map;
-	// Stack pointers
-	uint64_t sp0, sp1, sp2;
-	uint64_t ssp_state;
 	struct Task* next;
 }__attribute__((packed)) Task;
 

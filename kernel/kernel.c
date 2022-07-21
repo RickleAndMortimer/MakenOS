@@ -249,9 +249,11 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // Initialize devices
     remapPIC(0x20, 0x28);
     initIdt();
+	/*
     enableAPIC();
     enableAPICTimer(10000);
 	//enableKeyboard();
+	*/
 	initTasking();
 	doIt();
 	term_write("hello", 5);
