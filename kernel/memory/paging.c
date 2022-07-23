@@ -11,7 +11,7 @@ static inline void flushTLB(void* page)
 	asm volatile ("invlpg (%0)" :: "r" (page) : "memory");
 }
 
-static inline uint64_t readCR3(void)
+uint64_t readCR3(void)
 {
     uint64_t val;
     asm volatile ( "mov %%cr3, %0" : "=r"(val) );
@@ -63,8 +63,6 @@ void* getPhysicalAddress(void* virtual_address)
 
 static void allocateEntry(PageTable* table, size_t index, uint8_t flags)
 {
-    uint64_t* base = getMemoryMapBase();
-    uint64_t* map_length = getMemoryMapLength();
     void* physical_address = malloc(4096);
     setPageTableEntry(&(table->entries[index]), flags, (uintptr_t) physical_address >> 12, 0);
 }

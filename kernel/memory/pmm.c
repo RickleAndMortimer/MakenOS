@@ -44,7 +44,7 @@ void printMemoryMaps()
 				term_write("Entry ", 6);
 				printNumber(i, x);
 
-				char* type = getMemoryMapType(memmap_tag->memmap[i].type);
+				const char* type = getMemoryMapType(memmap_tag->memmap[i].type);
 				term_write(type, strlen(type));
 
 				term_write("\nBase ", 6);
@@ -72,28 +72,25 @@ uint64_t getMemoryMapLength()
 	return memmap->length;
 }
 
-void* malloc(size_t size) 
-{
-    if (memmap->length <= BLOCK_SIZE && *((uint64_t*)memmap->base) != 0) {
+void* k_malloc(uint64_t* base, size_t length, size_t size) {
+    if (length <= BLOCK_SIZE && *base != 0) {
         return NULL;
     }
-    size_t half = memmap->length / 2;
+    size_t half = length / 2;
     // Allocate if the current length is enough and unallocated
-    if (half <= size && *((uint64_t*)memmap->base) == 0) {
-	*((uint64_t*)memmap->base) = 1;
-	return (void*) memmap->base;
+    if (half <= size && *base == 0) {
+		return base;
     }
     // Try to find another block
     else if (half > size) {
-	uint64_t* left = malloc(size);
-	return left ? left : malloc(size);
+		uint64_t* left = k_malloc(base, half, size);
+		return left ? left : k_malloc(base + half, half, size);
     }
     // Otherwise, the memory cannot be allocated
     return NULL;
 }
 
-
-void free(void* base) 
+void k_free(void* base) 
 {
 	uint64_t* ptr = base;
 	for (size_t i = 0; i < BLOCK_SIZE; i++) {

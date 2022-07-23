@@ -2,6 +2,7 @@
 #include <idt.h>
 #include <ioapic.h>
 #include <madt.h>
+#include <task.h>
 #include <paging.h>
 #include <pic.h>
 #include <pit.h>
@@ -24,6 +25,7 @@ extern IOAPICNonMaskableInterruptSource* ioapic_interrupt_sources[];
 extern IOAPICNonMaskableInterrupt* ioapic_interrupts[];
 extern LAPICAddressOverride* lapic_address_overrides[];
 extern x2LAPIC* x2_lapics[];
+
 
 // Write to console function shared amongst the codebase
 void (*term_write)(const char *string, size_t length);
@@ -232,13 +234,13 @@ void _start(struct stivale2_struct *stivale2_struct) {
     uint64_t* p = getPhysicalAddress((void*) 0x9000);
     uint64_t* f = getPhysicalAddress((void*) 0xA000);
 
-    mapPage(p, 0x1000, 3);
-    mapPage(f, 0x1000, 3);
+    mapPage(p, (void*) 0x1000, 3);
+    mapPage(f, (void*) 0x1000, 3);
 
     p = getPhysicalAddress((void*) 0x9000);
     f = getPhysicalAddress((void*) 0xA000);
 
-    uint64_t* y = (uint64_t*)0x9000;
+    uint64_t* y = (uint64_t*) 0x9000;
     *y = 10;
     printNumber(*y, x);
     uint64_t* z = (uint64_t*) 0xA000;
@@ -247,9 +249,14 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // Initialize devices
     remapPIC(0x20, 0x28);
     initIdt();
+	/*
     enableAPIC();
     enableAPICTimer(10000);
-    enableKeyboard(ioapics[0]->address);
+	//enableKeyboard();
+	*/
+	initTasking();
+	doIt();
+	term_write("hello", 5);
 
     for (;;) 
     {
