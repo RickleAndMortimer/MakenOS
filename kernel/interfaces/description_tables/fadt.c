@@ -1,6 +1,5 @@
-#include <stdint.h>
-#include <fadt.h>
-#include <pic.h>
+#include "fadt.h"
+#include "../../sys/io.h"
 
 // see https://wiki.osdev.org/FADT for more info
 
@@ -13,7 +12,7 @@ void initFADT()
 
 void enableACPI() 
 {
-    my_outb(fadt->SMI_command_port, fadt->ACPI_enable);
+    outb(fadt->SMI_command_port, fadt->ACPI_enable);
     // Poll PM1a control block until it is clear
-    while ((my_inw(fadt->PM1a_control_block) & 1) == 0);
+    while ((inw(fadt->PM1a_control_block) & 1) == 0);
 }

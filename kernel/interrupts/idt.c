@@ -1,5 +1,4 @@
-#include <stdint.h>
-#include <idt.h>
+#include "idt.h"
 
 extern void* isr_stub_table[];
 extern void* irq_stub_table[];
@@ -33,6 +32,6 @@ void initIdt()
     {
         setIdtEntry(&idt_entries[i], (uint64_t)irq_stub_table[i-32], 0x28, 0, 0x8E);
     }
-    asm volatile("lidt %0" : : "m"(idt_ptr));
-    asm volatile("sti");
+    __asm__ volatile("lidt %0" : : "m"(idt_ptr));
+    __asm__ volatile("sti");
 }

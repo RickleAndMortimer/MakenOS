@@ -1,13 +1,10 @@
-#include <stdint.h>
-#include <pic.h>
-#include <kernel.h>
-#include <print.h>
-#include <isr.h>
-#include <ps2.h>
+#include "pic.h"
+#include "ps2.h"
+#include "../kernel.h"
+#include "../lib/print.h"
+#include "../sys/io.h"
+#include "../interrupts/isr.h"
 
-#define PS2_DATA_PORT 0x60 // Read/Write
-#define PS2_STATUS_REG 0x64 // Read
-#define PS2_COMMAND_REG 0x64 // Write
 
 /*
     Status Register 
@@ -33,7 +30,7 @@ May be "receive time-out" or "second PS/2 port output buffer full"
 */
 
 uint8_t readStatusRegister() {
-    return my_inb(PS2_STATUS_REG);
+    return inb(PS2_STATUS_REG);
 }
 
 void pollOutputBuffer() {
@@ -48,16 +45,16 @@ void pollInputBuffer() {
 
 uint8_t readDataPort() {
     pollOutputBuffer();
-    return my_inb(PS2_DATA_PORT);
+    return inb(PS2_DATA_PORT);
 }
 
 void writeDataPort(uint8_t byte) {
     pollInputBuffer();
-    my_outb(PS2_DATA_PORT, byte);
+    outb(PS2_DATA_PORT, byte);
 }
 
 void writeCommandRegister(uint8_t command_byte, uint8_t next_byte) {
-    my_outb(PS2_COMMAND_REG, command_byte);
+    outb(PS2_COMMAND_REG, command_byte);
     if (next_byte) {
 	pollInputBuffer();
 	readDataPort();
@@ -168,18 +165,16 @@ void pulseOutputLines(uint8_t lines) {
 }
 
 static void keyboardHandler(InterruptFrame* frame) {
-    char x[20];
     term_write("Handling interrupt\n", 20);
     uint8_t scan_code = readDataPort();
-    printNumber(scan_code , x);
+    printNumber(scan_code);
     if (frame->int_no == 12) {
 	sendEOIPIC(12);
     }
 }
 
 void initKeyboard() {
-    char x[20];
-    register_interrupt_handler(33, &keyboardHandler);
+    registerInterruptHandler(33, &keyboardHandler);
 
     // TODO: Initalise USB Controllers
     
@@ -206,78 +201,82 @@ void initKeyboard() {
     uint8_t controller_status = testPS2Controller();
 
     // Determine if there are two channels
-    if (two_channel) {
-	enablePS2Port2();
-	configuration_byte = readPS2RAM(0);
+    if (two_channel) 
+    {
+        enablePS2Port2();
+        configuration_byte = readPS2RAM(0);
     	term_write("is dual channel!\n", 17);
-	if (configuration_byte & 0b00010000) {
-	    two_channel = 0; 
-	}
-	else {
-	    disablePS2Port2();
-	}
+        if (configuration_byte & 0b00010000) 
+        {
+            two_channel = 0; 
+        }
+        else 
+        {
+            disablePS2Port2();
+        }
     }
 
     // Perform Inteface tests and enable devices
     uint8_t port1_status = testPS2Port1();
     term_write("Port 1 Status:\n", 16);
-    printNumber(port1_status, x);
-    switch (port1_status) {
-	case 0x00:
-	    enablePS2Port1();
-	    configuration_byte = readPS2RAM(0);
-	    writeConfigurationByte(configuration_byte | 1);
-	    break;
-	case 0x01:
-	    // clock line stuck low
-	    break;
-	case 0x02:
-	    // clock line stuck high
-	    break;
-	case 0x03:
-	    // data line stuck low
-	    break;
-	case 0x04:
-	    // data line stuck high
-	    break;
+    printNumber(port1_status);
+    switch (port1_status) 
+    {
+        case 0x00:
+            enablePS2Port1();
+            configuration_byte = readPS2RAM(0);
+            writeConfigurationByte(configuration_byte | 1);
+            break;
+        case 0x01:
+            // clock line stuck low
+            break;
+        case 0x02:
+            // clock line stuck high
+            break;
+        case 0x03:
+            // data line stuck low
+            break;
+        case 0x04:
+            // data line stuck high
+            break;
     }
 
     configuration_byte = readPS2RAM(0);
     term_write("Configuration byte from 1\n", 26);
-    printNumber(configuration_byte, x);
+    printNumber(configuration_byte);
     if (two_channel) {
     	uint8_t port2_status = testPS2Port2();
     	term_write("Port 2 Status:\n", 15);
-    	printNumber(port2_status, x);
-	switch (port2_status) {
-	    case 0x00:
-	        enablePS2Port2();
-	    	configuration_byte = readPS2RAM(0);
-	    	writeConfigurationByte(configuration_byte | 2);
+    	printNumber(port2_status);
+        switch (port2_status) {
+            case 0x00:
+                enablePS2Port2();
+                configuration_byte = readPS2RAM(0);
+                writeConfigurationByte(configuration_byte | 2);
 
-	    	configuration_byte = readPS2RAM(0);
-    		term_write("Configuration byte from 2\n", 26);
-    		printNumber(configuration_byte, x);
-	        break;
-	    case 0x01:
-	        // clock line stuck low
-	        break;
-	    case 0x02:
-	        // clock line stuck high
-	        break;
-	    case 0x03:
-	        // data line stuck low
-	        break;
-	    case 0x04:
-	        // data line stuck high
-	        break;
-	}
+                configuration_byte = readPS2RAM(0);
+                term_write("Configuration byte from 2\n", 26);
+                printNumber(configuration_byte);
+                break;
+            case 0x01:
+                // clock line stuck low
+                break;
+            case 0x02:
+                // clock line stuck high
+                break;
+            case 0x03:
+                // data line stuck low
+                break;
+            case 0x04:
+                // data line stuck high
+                break;
+        }
     }
     // Reset Devices
     writeOutputBuffer(0xFF, 0);
     writeOutputBuffer(0xFF, 1);
     if (two_channel) {
-	writeOutputBuffer(0xFF, 2);
+        writeOutputBuffer(0xFF, 2);
     	readDataPort();
     }
 

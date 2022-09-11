@@ -1,3 +1,5 @@
+#ifndef GDT_H
+#define GDT_H
 #include <stdint.h>
 
 typedef struct SegmentDescriptor
@@ -18,3 +20,5 @@ typedef struct GDTPointer
 
 void setEntry(SegmentDescriptor* entry, uint32_t base, uint8_t flags, uint8_t access_byte, uint16_t limit);
 void setSystemEntry(SegmentDescriptor* entry_1, SegmentDescriptor* entry_2, uint64_t base, uint8_t flags, uint8_t access_byte, uint16_t limit);
+
+#endif 

@@ -1,9 +1,7 @@
-#include <task.h>
-#include <paging.h>
-#include <pmm.h>
-#include <kernel.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "task.h"
+#include "../memory/paging.h"
+#include "../memory/pmm.h"
+#include "../kernel.h"
 
 static Task *runningTask;
 static Task mainTask;
@@ -52,8 +50,8 @@ static void otherMain()
 void initTasking() 
 {
     // Get RFLAGS and CR3
-    asm volatile("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
-    asm volatile("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.rflags)::"%rax");
+    __asm__ volatile("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
+    __asm__ volatile("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.rflags)::"%rax");
  
     createTask(&otherTask, otherMain, mainTask.regs.rflags, mainTask.regs.cr3);
     mainTask.next = &otherTask;

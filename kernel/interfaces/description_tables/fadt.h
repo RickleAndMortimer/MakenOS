@@ -1,5 +1,8 @@
+#ifndef FADT_H
+#define FADT_H
+
 #include <stdint.h>
-#include <acpi.h>
+#include "../acpi.h"
 
 // see https://wiki.osdev.org/FADT for more info
 
@@ -77,4 +80,6 @@ typedef struct FADT
     GenericAddressStructure X_PM_timer_block;
     GenericAddressStructure X_GPE0_block;
     GenericAddressStructure X_GPE1_block;
-} __attribute__((packed)) FADT;
+}__attribute__((packed)) FADT;
+
+#endif

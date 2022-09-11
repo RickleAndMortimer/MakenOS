@@ -1,5 +1,8 @@
+#ifndef MADT_H
+#define MADT_H
+
+#include "../acpi.h"
 #include <stdint.h>
-#include <acpi.h>
 #include <stddef.h>
 
 typedef struct MADT 
@@ -84,3 +87,5 @@ typedef struct x2LAPIC
 
 void initMADT();
 void parseMADT();
+
+#endif
