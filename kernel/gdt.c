@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <gdt.h>
+#include "gdt.h"
 
 SegmentDescriptor entries[6];
 

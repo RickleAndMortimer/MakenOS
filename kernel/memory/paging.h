@@ -1,3 +1,6 @@
+#ifndef PAGING_H
+#define PAGING_H
+
 #include <stdint.h>
 
 // options1:     R P/W U/S PWT PCD A D PS(1) G AVL
@@ -32,3 +35,5 @@ void* getPhysicalAddress(void* virtual_address);
 PageTable* initPML4(void); 
 void mapPage(void* virtual_address, void* physical_address, uint8_t flags);
 uint64_t readCR3(void);
+
+#endif

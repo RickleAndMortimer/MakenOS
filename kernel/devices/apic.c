@@ -1,11 +1,12 @@
 #include <cpuid.h>
-#include <apic.h>
-#include <kernel.h>
-#include <pic.h>
-#include <pit.h>
-#include <isr.h>
-#include <print.h>
 #include <stdint.h>
+
+#include "apic.h"
+#include "../kernel.h"
+#include "pic.h"
+#include "pit.h"
+#include "../interrupts/isr.h"
+#include "../lib/print.h"
 
 #define IA32_APIC_BASE_MSR 0x1B
 #define IA32_APIC_BASE_MSR_BSP 0x100 // Processor is a BSP
@@ -89,12 +90,12 @@ static int cpuHasMSR()
  
 void cpuGetMSR(uint32_t msr, uint32_t *lo, uint32_t *hi)
 {
-    asm volatile("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
+    __asm__ volatile("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
 }
  
 void cpuSetMSR(uint32_t msr, uint32_t lo, uint32_t hi)
 {
-    asm volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
+    __asm__ volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
 }
 
 uintptr_t cpuGetAPICBase() 
@@ -150,14 +151,13 @@ void enableAPIC(void)
 {
     term_write("Enabling APIC\n", 14);
     // disable PIC
-    asm volatile ("mov $0xff, %al;"
+    __asm__ volatile ("mov $0xff, %al;"
 		  "out %al, $0xa1;"
 		  "out %al, $0x21;");
     disableAllIRQs();
     /* Hardware enable the Local APIC if it wasn't enabled */
     cpuSetAPICBase(cpuGetAPICBase());
-    char x[20];
-    printNumber(cpuGetAPICBase(), x);
+    printNumber(cpuGetAPICBase());
  
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
     writeAPICRegister(0xF0, readAPICRegister(0xF0) | 0x1FF);
@@ -191,5 +191,5 @@ void enableAPICTimer(uint32_t frequency)
     writeAPICRegister(0x3E0, 0x3);
     writeAPICRegister(0x380, apic_ticks);
 
-    register_interrupt_handler(32, &APIC_timer_callback);
+    registerInterruptHandler(32, &APIC_timer_callback);
 }

@@ -1,6 +1,8 @@
+#ifndef FILE_H
+#define FILE_H
+
 #include <stdint.h>
 #include <stddef.h>
-
 
 typedef struct vfs 
 {
@@ -46,6 +48,8 @@ typedef struct inode_table {
 } inode_table;
 
 inode* fopen(char* filename);
-int fwrite(inode* i, const char* data, size_t len);
+int fwrite(inode* node, const char* data, size_t len);
 int fread(inode* i, char* buffer, size_t blocks, size_t length);
 inode_table* initRamFS();
+
+#endif

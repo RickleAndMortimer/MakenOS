@@ -5,8 +5,6 @@
 #include "pic.h"
 #include "ps2.h"
 #include "../lib/print.h"
-#include "stddef.h"
-#include "stdint.h"
 
 uint32_t readIOAPIC(size_t ioapicaddr, uint32_t reg)
 {
@@ -30,7 +28,6 @@ static void keyboardHandler(InterruptFrame* frame)
 
 void readIOREDTBLs(size_t ioapicaddr) 
 {
-    char x[20];
     uint32_t IOAPICID = readIOAPIC(ioapicaddr, 0x0);
     uint32_t IOAPICVER = readIOAPIC(ioapicaddr, 0x1);
     printNumber(IOAPICID);
@@ -49,5 +46,5 @@ void readIOREDTBLs(size_t ioapicaddr)
 void enableKeyboard(size_t ioapicaddr) 
 {
     writeIOAPIC(ioapicaddr, 0x12, 0x21);
-    register_interrupt_handler(0x21, &keyboardHandler);
+    registerInterruptHandler(0x21, &keyboardHandler);
 }

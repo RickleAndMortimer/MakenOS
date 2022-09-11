@@ -1,3 +1,6 @@
+#ifndef APIC_H
+
+#define APIC_H
 #include <stdint.h>
 
 // https://wiki.osdev.org/APIC#IO_APIC_Registers
@@ -10,3 +13,5 @@ uint32_t readAPICRegister(uint32_t reg);
 void writeAPICRegister(uint32_t reg, uint32_t value);
 void enableAPIC();
 void enableAPICTimer(uint32_t frequency);
+
+#endif

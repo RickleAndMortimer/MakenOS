@@ -1,20 +1,19 @@
-#include <paging.h>
-#include <pmm.h>
-#include <print.h>
-#include <stdint.h>
+#include "paging.h"
+#include "pmm.h"
+#include "../lib/print.h"
 
 static PageTable* pml4;
 extern struct stivale2_mmap_entry* memmap;
 
 static inline void flushTLB(void* page) 
 {
-	asm volatile ("invlpg (%0)" :: "r" (page) : "memory");
+	__asm__ volatile ("invlpg (%0)" :: "r" (page) : "memory");
 }
 
 uint64_t readCR3(void)
 {
     uint64_t val;
-    asm volatile ( "mov %%cr3, %0" : "=r"(val) );
+    __asm__ volatile ( "mov %%cr3, %0" : "=r"(val) );
     return val;
 }
 
@@ -44,7 +43,6 @@ void setPageTableEntry(PageEntry* entry, uint8_t flags, uintptr_t physical_addre
 void* getPhysicalAddress(void* virtual_address) 
 {
     uintptr_t address = (uintptr_t) virtual_address;
-    char x[20];
 
     uint64_t offset = address & 0xFFF;
     uint64_t page_table_index = (address >> 12) & 0x1FF;
@@ -61,7 +59,7 @@ void* getPhysicalAddress(void* virtual_address)
 
 static void allocateEntry(PageTable* table, size_t index, uint8_t flags)
 {
-    void* physical_address = malloc(4096);
+    void* physical_address = k_malloc(4096);
     setPageTableEntry(&(table->entries[index]), flags, (uintptr_t) physical_address >> 12, 0);
 }
 
@@ -78,21 +76,18 @@ void mapPage(void* virtual_address, void* physical_address, uint8_t flags)
     uint64_t page_table_index = (virtual_address_int >> 12) & 0x1FF;
  
     if (!pml4->entries[pml4_index].present)
-    {
-	allocateEntry(pml4, pml4_index, flags);
-    }
+        allocateEntry(pml4, pml4_index, flags);
+
     PageTable* page_directory_pointer = (PageTable*) (uint64_t) (pml4->entries[pml4_index].physical_address << 12);
 
     if (!page_directory_pointer->entries[page_directory_pointer_index].present) 
-    {
-	allocateEntry(page_directory_pointer, page_directory_pointer_index, flags);
-    }
+        allocateEntry(page_directory_pointer, page_directory_pointer_index, flags);
+
     PageTable* page_directory = (PageTable*) (uint64_t) (page_directory_pointer->entries[page_directory_pointer_index].physical_address << 12);
 
     if (!page_directory->entries[page_directory_index].present) 
-    {
-	allocateEntry(page_directory, page_directory_index, flags);
-    }
+        allocateEntry(page_directory, page_directory_index, flags);
+
     PageTable* page_table = (PageTable*) (uint64_t) (page_directory->entries[page_directory_index].physical_address << 12);
 
     setPageTableEntry(&(page_table->entries[page_table_index]), flags, physical_address_int >> 12, 0);

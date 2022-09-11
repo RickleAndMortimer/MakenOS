@@ -1,11 +1,8 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <string.h>
+#include "pmm.h"
+#include "../lib/string.h"
+#include "../lib/print.h"
+#include "../kernel.h"
 #include <stivale2.h>
-#include <print.h>
-#include <kernel.h>
-
-#define BLOCK_SIZE 4096
 
 extern struct stivale2_struct_tag_memmap* memmap_tag;
 static struct stivale2_mmap_entry* memmap;
@@ -36,23 +33,22 @@ static const char* getMemoryMapType(uint32_t type)
 
 void printMemoryMaps() 
 {
-    char x[20];
     for (size_t i = 0; i < memmap_tag->entries; i++) {
 		switch (memmap_tag->memmap[i].type) {
 			case 1:	
 			case 0x1000:
 			case 3:
 				term_write("Entry ", 6);
-				printNumber(i, x);
+				printNumber(i);
 
 				const char* type = getMemoryMapType(memmap_tag->memmap[i].type);
 				term_write(type, strlen(type));
 
 				term_write("\nBase ", 6);
-				printNumber(memmap_tag->memmap[i].base, x);
+				printNumber(memmap_tag->memmap[i].base);
 
 				term_write("Length ", 7);
-				printNumber(memmap_tag->memmap[i].length, x);
+				printNumber(memmap_tag->memmap[i].length);
 			break;
 		}
     }
@@ -73,7 +69,8 @@ uint64_t getMemoryMapLength()
 	return memmap->length;
 }
 
-static void* b_malloc(uint64_t* base, size_t length, size_t size) {
+static void* b_malloc(uint64_t* base, size_t length, size_t size) 
+{
     if (length <= BLOCK_SIZE && *base != 0) {
         return NULL;
     }
@@ -91,15 +88,17 @@ static void* b_malloc(uint64_t* base, size_t length, size_t size) {
     return NULL;
 }
 
-void* k_malloc() {
-    return b_malloc(memmap->base, memmap->length, BLOCK_SIZE);
+void* k_malloc() 
+{
+    return b_malloc((uint64_t*)memmap->base, memmap->length, BLOCK_SIZE);
 }
 
 
 void k_free(void* base) 
 {
 	uint64_t* ptr = base;
-	for (size_t i = 0; i < BLOCK_SIZE; i++) {
+	for (size_t i = 0; i < BLOCK_SIZE; i++) 
+    {
 		ptr[i] = 0;
 	}
 }

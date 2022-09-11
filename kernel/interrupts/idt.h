@@ -1,3 +1,6 @@
+#ifndef IDT_H
+#define IDT_H
+
 #include <stdint.h>
 
 typedef struct IDTEntry
@@ -19,3 +22,5 @@ typedef struct IDTPointer
 
 void initIdt();
 void setIdtEntry(IDTEntry *target, uint64_t offset, uint16_t selector, uint8_t ist, uint8_t type_attributes);
+
+#endif

@@ -1,4 +1,8 @@
+#ifndef ACPI_H
+#define ACPI_H
+
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct  
 {
@@ -49,3 +53,5 @@ RSDT* getRSDT();
 uint8_t validateRSDPChecksum();
 uint8_t validateSDTChecksum(ACPISDTHeader* table_header);
 ACPISDTHeader* findHeader(char* signature);
+
+#endif
