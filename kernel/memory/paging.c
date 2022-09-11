@@ -56,9 +56,7 @@ void* getPhysicalAddress(void* virtual_address)
     PageTable* page_directory = (PageTable*) ((uint64_t) (page_directory_pointer->entries[page_directory_pointer_index].physical_address) << 12);
     PageTable* page_table = (PageTable*) ((uint64_t) (page_directory->entries[page_directory_index].physical_address) << 12);
 
-    printNumber(page_table->entries[page_table_index].physical_address, x);
-
-    return (void*) (page_table->entries[page_table_index].physical_address);
+    return (void*) ((page_table->entries[page_table_index].physical_address << 12) + offset);
 }
 
 static void allocateEntry(PageTable* table, size_t index, uint8_t flags)
@@ -97,7 +95,7 @@ void mapPage(void* virtual_address, void* physical_address, uint8_t flags)
     }
     PageTable* page_table = (PageTable*) (uint64_t) (page_directory->entries[page_directory_index].physical_address << 12);
 
-    setPageTableEntry(&(page_table->entries[page_table_index]), flags, physical_address_int, 0);
+    setPageTableEntry(&(page_table->entries[page_table_index]), flags, physical_address_int >> 12, 0);
 	
     // Now you need to flush the entry in the TLB
     flushTLB(virtual_address);

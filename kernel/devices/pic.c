@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <pic.h>
+#include "pic.h"
 
 /* reinitialize the PIC controllers, giving them specified vector offsets
    rather than 8h and 70h, as configured by default */
@@ -45,6 +45,15 @@ uint16_t my_inw(uint16_t port)
     return ret;
 }
 
+uint32_t my_in(uint16_t port)
+{
+    uint32_t ret;
+    asm volatile ( "in %1, %0"
+                   : "=a"(ret)
+                   : "Nd"(port) );
+    return ret;
+}
+
 void my_outb(uint16_t port, uint8_t val)
 {
     asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
@@ -54,6 +63,10 @@ void my_outb(uint16_t port, uint8_t val)
      * %1 expands to %dx because  port  is a uint16_t.  %w1 could be used if we had the port number a wider C type */
 }
 
+void my_out(uint16_t port, uint32_t val)
+{
+    asm volatile ( "out %0, %1" : : "a"(val), "Nd"(port) );
+}
 
 void my_io_wait(void)
 {

@@ -5,12 +5,13 @@
 #include <print.h>
 #include <kernel.h>
 
-#define BLOCK_SIZE 512
+#define BLOCK_SIZE 4096
 
 extern struct stivale2_struct_tag_memmap* memmap_tag;
 static struct stivale2_mmap_entry* memmap;
 
-static const char* getMemoryMapType(uint32_t type) {
+static const char* getMemoryMapType(uint32_t type) 
+{
     switch (type) {
         case 0x1:
             return "Usable RAM";
@@ -72,7 +73,7 @@ uint64_t getMemoryMapLength()
 	return memmap->length;
 }
 
-void* k_malloc(uint64_t* base, size_t length, size_t size) {
+static void* b_malloc(uint64_t* base, size_t length, size_t size) {
     if (length <= BLOCK_SIZE && *base != 0) {
         return NULL;
     }
@@ -83,12 +84,17 @@ void* k_malloc(uint64_t* base, size_t length, size_t size) {
     }
     // Try to find another block
     else if (half > size) {
-		uint64_t* left = k_malloc(base, half, size);
-		return left ? left : k_malloc(base + half, half, size);
+		uint64_t* left = b_malloc(base, half, size);
+		return left ? left : b_malloc(base + half, half, size);
     }
     // Otherwise, the memory cannot be allocated
     return NULL;
 }
+
+void* k_malloc() {
+    return b_malloc(memmap->base, memmap->length, BLOCK_SIZE);
+}
+
 
 void k_free(void* base) 
 {

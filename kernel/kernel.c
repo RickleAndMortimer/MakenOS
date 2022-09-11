@@ -1,17 +1,19 @@
-#include <apic.h>
-#include <idt.h>
-#include <ioapic.h>
-#include <madt.h>
-#include <task.h>
-#include <paging.h>
-#include <pic.h>
-#include <pit.h>
-#include <pmm.h>
-#include <print.h>
-#include <ps2.h>
+#include "devices/apic.h"
+#include "interrupts/idt.h"
+#include "devices/ioapic.h"
+#include "interfaces/madt.h"
+#include "tasks/task.h"
+#include "memory/paging.h"
+#include "devices/pic.h"
+#include "devices/pci.h"
+#include "devices/pit.h"
+#include "memory/pmm.h"
+#include "lib/print.h"
+#include "devices/ps2.h"
 #include <stddef.h>
 #include <stdint.h>
-#include <stivale2.h>
+#include "stivale2.h"
+#include "filesystem/file.h"
 
 extern RSDPDescriptor20 *rsdp_descriptor;
 extern XSDT* xsdt;
@@ -27,8 +29,8 @@ extern LAPICAddressOverride* lapic_address_overrides[];
 extern x2LAPIC* x2_lapics[];
 
 
-// Write to console function shared amongst the codebase
 void (*term_write)(const char *string, size_t length);
+// Write to console function shared amongst the codebase
 struct stivale2_struct_tag_memmap* memmap_tag;
 
 // We need to tell the stivale bootloader where we want our stack to be.
@@ -174,7 +176,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("Hello World\n", 13);
     char x[20];
     // start accessing XSDT/RSDT entries
-    printNumber(rsdp_tag->rsdp, x);
+    printNumber(rsdp_tag->rsdp);
 
     rsdp_descriptor = (RSDPDescriptor20*) rsdp_tag->rsdp;
     if (rsdp_descriptor->descriptor10.revision == 2) 
@@ -186,7 +188,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     if ((validateRSDPChecksum() & 0xFF) == 0) 
     {
 	term_write("ACPI ready to go\n", 18);
-	printNumber(rsdp_descriptor->descriptor10.revision, x);
+	printNumber(rsdp_descriptor->descriptor10.revision);
     }
     term_write(rsdt->h.signature, 4);
     // Find FADT and enable ACPI mode there
@@ -203,24 +205,24 @@ void _start(struct stivale2_struct *stivale2_struct) {
     term_write("testing results\n", 16);
 
     term_write("my results\n", 12);
-    printNumber(madt->header.length, x);
-    printNumber(madt->APIC_address, x);
-    printNumber(ioapics[0]->global_system_interrupt_base, x);
+    printNumber(madt->header.length);
+    printNumber(madt->APIC_address);
+    printNumber(ioapics[0]->global_system_interrupt_base);
     for (uint8_t i = 0; i < 5; i++) 
     {
-	term_write("IOAPIC\n", 7);
-        printNumber(ioapic_source_overrides[i]->bus_source, x);
-        printNumber(ioapic_source_overrides[i]->IRQ_source, x);
-        printNumber(ioapic_source_overrides[i]->global_system_interrupt, x);
+        term_write("IOAPIC\n", 7);
+        printNumber(ioapic_source_overrides[i]->bus_source);
+        printNumber(ioapic_source_overrides[i]->IRQ_source);
+        printNumber(ioapic_source_overrides[i]->global_system_interrupt);
     }
 
     if (smp_tag) {
         term_write("limine's results\n", 18);
-        printNumber(smp_tag->cpu_count, x);
-        printNumber(smp_tag->flags, x);
-        printNumber(smp_tag->unused, x);
-        printNumber(smp_tag->smp_info[0].lapic_id, x);
-        printNumber(smp_tag->smp_info[0].processor_id, x);
+        printNumber(smp_tag->cpu_count);
+        printNumber(smp_tag->flags);
+        printNumber(smp_tag->unused);
+        printNumber(smp_tag->smp_info[0].lapic_id);
+        printNumber(smp_tag->smp_info[0].processor_id);
     }
 
     term_write("results done\n", 14);
@@ -231,32 +233,51 @@ void _start(struct stivale2_struct *stivale2_struct) {
     printMemoryMaps();
     setMemoryMap(4);
 
-    uint64_t* p = getPhysicalAddress((void*) 0x9000);
-    uint64_t* f = getPhysicalAddress((void*) 0xA000);
-
-    mapPage(p, (void*) 0x1000, 3);
-    mapPage(f, (void*) 0x1000, 3);
-
-    p = getPhysicalAddress((void*) 0x9000);
-    f = getPhysicalAddress((void*) 0xA000);
-
-    uint64_t* y = (uint64_t*) 0x9000;
-    *y = 10;
-    printNumber(*y, x);
-    uint64_t* z = (uint64_t*) 0xA000;
-    printNumber(*z, x);
-
     // Initialize devices
     remapPIC(0x20, 0x28);
     initIdt();
-	/*
+
     enableAPIC();
     enableAPICTimer(10000);
-	//enableKeyboard();
-	*/
+	enableKeyboard(ioapics[0]->address);
+
 	initTasking();
-	doIt();
-	term_write("hello", 5);
+	term_write("hello\n", 6);
+
+    /*
+    uint64_t* p = getPhysicalAddress((void*) 0x9000);
+    uint64_t* f = getPhysicalAddress((void*) 0xA000);
+
+    mapPage(0x9000, (void*) 0x1000, 3);
+    mapPage(0xA000, (void*) 0x1000, 3);
+
+    term_write("goodbye\n", 8);
+    p = getPhysicalAddress((void*) 0x9001);
+    f = getPhysicalAddress((void*) 0xA000);
+
+    uint64_t* y = (uint64_t*) 0x9000;
+    *y = 100;
+    printNumber(*y);
+    uint64_t* z = (uint64_t*) 0xA000;
+    printNumber(*z);
+
+
+    printNumber(p);
+    printNumber(f);
+
+    */
+    inode_table* f = initRamFS();
+    inode* i = fopen("neighbor");
+    fwrite(i, "hello", 6);
+    char jk[10];
+    fread(i, jk, 1, 6);
+    term_write(jk, 10);
+    
+    uint16_t rose = pciConfigReadWord(0, 31, 3, 0x20);
+    printNumber(rose);
+
+    rose = pciConfigReadWord(0, 31, 3, 0x22);
+    printNumber(rose);
 
     for (;;) 
     {

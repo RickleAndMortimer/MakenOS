@@ -9,5 +9,7 @@ void disableAllIRQs();
 void remapPIC(int offset1, int offset2);
 
 void my_outb(uint16_t, uint8_t);
+void my_out(uint16_t, uint32_t);
 uint8_t my_inb(uint16_t port);
 uint16_t my_inw(uint16_t port);
+uint32_t my_in(uint16_t port);
