@@ -11,6 +11,7 @@
 #include "lib/print.h"
 #include "devices/ps2.h"
 #include "stivale2.h"
+#include "devices/serial.h"
 #include "filesystem/file.h"
 
 extern RSDPDescriptor20 *rsdp_descriptor;
@@ -120,16 +121,14 @@ void _start(struct stivale2_struct *stivale2_struct) {
     // Check if the tags were actually found.
     if (term_str_tag == NULL) 
     {
-        for (;;) {
-            asm ("hlt");
-        }
+        for (;;) 
+            __asm__ ("hlt");
     }
 
     if (rsdp_tag == NULL) 
     {
-        for (;;) {
-            asm ("hlt");
-        }
+        for (;;) 
+            __asm__ ("hlt");
     }
 
     void *term_write_ptr = (void *)term_str_tag->term_write;
@@ -155,7 +154,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
     // Find FADT and enable ACPI mode there
     ACPISDTHeader* fadt = findHeader("FACP");
-    if (fadt) {
+    if (fadt) 
+    {
     	term_write(fadt->signature, 4);
     }
 
@@ -179,7 +179,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
         printNumber(ioapic_source_overrides[i]->global_system_interrupt);
     }
 
-    if (smp_tag) {
+    if (smp_tag) 
+    {
         term_write("limine's results\n", 18);
         printNumber(smp_tag->cpu_count);
         printNumber(smp_tag->flags);
@@ -205,7 +206,6 @@ void _start(struct stivale2_struct *stivale2_struct) {
 	enableKeyboard(ioapics[0]->address);
 
 	initTasking();
-	term_write("hello\n", 6);
 
     /*
     uint64_t* p = getPhysicalAddress((void*) 0x9000);
@@ -241,6 +241,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
     rose = pciConfigReadWord(0, 31, 3, 0x22);
     printNumber(rose);
+
+	enableSerialCOM1(ioapics[0]->address);
 
     for (;;) 
     {

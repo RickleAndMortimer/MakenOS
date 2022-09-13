@@ -28,7 +28,7 @@ inode* fopen(char* filename)
     return NULL;
 }
 
-int fwrite(inode* node, const char* data, size_t len) 
+int fwrite(inode* node, char* data, size_t len) 
 {
     memcpy(&node->block[0], data, len);
     return 1;

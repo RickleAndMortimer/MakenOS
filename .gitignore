@@ -6,3 +6,4 @@ kernel/stivale2.h
 *.hdd
 *.o
 *.d
+kernel.sym
