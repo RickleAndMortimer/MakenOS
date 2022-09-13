@@ -2,6 +2,7 @@
 #include "../sys/io.h"
 #include "pci.h"
 #include "ioapic.h"
+#include "../lib/print.h"
 #include <stdbool.h>
 
 uint16_t pciConfigReadWord(uint8_t bus, uint8_t device, uint8_t func, uint8_t offset) 
@@ -38,7 +39,7 @@ uint16_t getHeaderType(uint16_t bus, uint16_t device, uint16_t function)
 
 bool checkFunction(uint8_t bus, uint8_t device, uint8_t function) 
 {
-    return true;
+    return getHeaderType(bus, device, function) != 0xFFFF;
 }
 
 void checkDevice(uint8_t bus, uint8_t device) 
@@ -72,11 +73,16 @@ void checkAllBuses(void)
     }
 }
 
+void pciInterruptHandler(InterruptFrame* frame) 
+{
+    printNumber(frame->int_no);
+}
+
 void enablePCIInterrupts(uint8_t bus, uint8_t device, uint8_t function, size_t ioapicaddr) 
 {
     uint16_t interrupt = pciConfigReadWord(bus, device, function, 0x4C);
     uint16_t interrupt_line = interrupt & 0xFF;
     uint16_t interrupt_pin = interrupt >> 8;
     writeIOAPIC(ioapicaddr, interrupt_line * 2 + 0x10, 0x20 + interrupt_line);
-    registerInterruptHandler(0x20 + interrupt_line, NULL);
+    registerInterruptHandler(0x20 + interrupt_line, &pciInterruptHandler);
 }

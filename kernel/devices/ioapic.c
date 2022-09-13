@@ -4,6 +4,7 @@
 #include "../kernel.h"
 #include "pic.h"
 #include "ps2.h"
+#include "serial.h"
 #include "../lib/print.h"
 
 uint32_t readIOAPIC(size_t ioapicaddr, uint32_t reg)
@@ -36,8 +37,8 @@ void readIOREDTBLs(size_t ioapicaddr)
     {
         term_write("IRQ ", 4);
         printNumber(i);
-        uint32_t redirection_entry_1 = readIOAPIC(ioapicaddr, 0x10 + i);
-        uint32_t redirection_entry_2 = readIOAPIC(ioapicaddr, 0x11 + i);
+        uint32_t redirection_entry_1 = readIOAPIC(ioapicaddr, 0x10 + i * 2);
+        uint32_t redirection_entry_2 = readIOAPIC(ioapicaddr, 0x11 + i * 2);
         printNumber(redirection_entry_1);
         printNumber(redirection_entry_2);
     }
@@ -47,4 +48,10 @@ void enableKeyboard(size_t ioapicaddr)
 {
     writeIOAPIC(ioapicaddr, 0x12, 0x21);
     registerInterruptHandler(0x21, &keyboardHandler);
+}
+
+void enableSerialCOM1(size_t ioapicaddr)
+{
+    writeIOAPIC(ioapicaddr, 0x18, 0x24);
+    initSerial();
 }
