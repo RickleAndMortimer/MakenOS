@@ -1,11 +1,16 @@
 #include "apic.h"
 #include "ioapic.h"
-#include "../interrupts/isr.h"
+#include "../interrupts/isr.h" 
 #include "../kernel.h"
 #include "pic.h"
 #include "ps2.h"
 #include "serial.h"
 #include "../lib/print.h"
+#include "../lib/string.h"
+#include <stdbool.h>
+
+extern char* set1_scancodes[];
+extern char* shift_set1_scancodes[];
 
 uint32_t readIOAPIC(size_t ioapicaddr, uint32_t reg)
 {
@@ -21,9 +26,39 @@ void writeIOAPIC(size_t ioapicaddr, uint32_t reg, uint32_t value)
     ioapic[4] = value;
 }
 
+static bool shift = false;
+static bool caps_lock = false;
+static bool ctrl = false;
+
 static void keyboardHandler(InterruptFrame* frame) 
 {
-    printNumber(readDataPort());
+    size_t input = readDataPort();
+    if (input == 0x2A || input == 0x36) 
+        shift = true;    
+
+    else if (input == 0x3A) 
+        caps_lock ^= true;    
+
+    else if (input == 0x1D) 
+        ctrl = true;   
+
+    else if (input < 0x58) 
+    {
+        if (ctrl)
+            term_write("^", 1);
+
+        if (shift ^ caps_lock) 
+            term_write(shift_set1_scancodes[input], strlen(shift_set1_scancodes[input])); 
+        else 
+            term_write(set1_scancodes[input], strlen(set1_scancodes[input]));
+    }
+
+    else if (input == 0xAA || input == 0xB6) 
+        shift = false;    
+
+    else if (input == 0x9D) 
+        ctrl = false;   
+   
     writeAPICRegister(0xB0, 0);
 }
 

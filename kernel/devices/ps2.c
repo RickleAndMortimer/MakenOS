@@ -169,7 +169,7 @@ static void keyboardHandler(InterruptFrame* frame) {
     uint8_t scan_code = readDataPort();
     printNumber(scan_code);
     if (frame->int_no == 12) {
-	sendEOIPIC(12);
+        sendEOIPIC(12);
     }
 }
 
