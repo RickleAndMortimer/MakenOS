@@ -50,6 +50,7 @@ typedef struct inode_table {
 inode* fopen(char* filename);
 int fwrite(inode* node, char* data, size_t len);
 int fread(inode* i, char* buffer, size_t blocks, size_t length);
+void* f_malloc(inode* node, size_t block_index);
 inode_table* initRamFS();
 
 #endif

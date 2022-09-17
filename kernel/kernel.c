@@ -12,6 +12,7 @@
 #include "devices/ps2.h"
 #include "stivale2.h"
 #include "devices/serial.h"
+#include "devices/ahci.h"
 #include "filesystem/file.h"
 
 extern RSDPDescriptor20 *rsdp_descriptor;
@@ -26,7 +27,6 @@ extern IOAPICNonMaskableInterruptSource* ioapic_interrupt_sources[];
 extern IOAPICNonMaskableInterrupt* ioapic_interrupts[];
 extern LAPICAddressOverride* lapic_address_overrides[];
 extern x2LAPIC* x2_lapics[];
-
 
 void (*term_write)(const char *string, size_t length);
 struct stivale2_struct_tag_memmap* memmap_tag;
@@ -132,17 +132,14 @@ void _start(struct stivale2_struct *stivale2_struct) {
     }
 
     void *term_write_ptr = (void *)term_str_tag->term_write;
-    
     term_write = term_write_ptr;
-
-    term_write("Hello World\n", 13);
-    printNumber(rsdp_tag->rsdp);
 
     rsdp_descriptor = (RSDPDescriptor20*) rsdp_tag->rsdp;
     if (rsdp_descriptor->descriptor10.revision == 2) 
     {
         xsdt = (XSDT*)rsdp_descriptor->xsdt_address;
     }
+
     rsdt = (RSDT*)(uintptr_t)rsdp_descriptor->descriptor10.rsdt_address;
 
     if ((validateRSDPChecksum() & 0xFF) == 0) 
@@ -193,7 +190,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
     memmap_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
-    PageTable* pml4 = initPML4();
+    // Initialize paging and memory management
+    initPML4();
     printMemoryMaps();
     setMemoryMap(4);
 
@@ -207,7 +205,8 @@ void _start(struct stivale2_struct *stivale2_struct) {
 
 	initTasking();
 
-    /*
+    /* test that paging works
+   
     uint64_t* p = getPhysicalAddress((void*) 0x9000);
     uint64_t* f = getPhysicalAddress((void*) 0xA000);
 
@@ -229,12 +228,22 @@ void _start(struct stivale2_struct *stivale2_struct) {
     printNumber(f);
 
     */
+
+    /* Test basic filesystem code
+
     inode_table* f = initRamFS();
     inode* i = fopen("neighbor");
-    fwrite(i, "hello", 6);
-    char jk[10];
-    fread(i, jk, 1, 6);
-    term_write(jk, 10);
+    
+    char jk[18];
+    f_malloc(i, 0);
+    fwrite(i, "jerry seinfelding\n", 19);
+
+    fread(i, jk, 1, 19);
+    term_write(jk, 19);
+
+    fwrite(i, "jerry seinfelded\n", 18);
+    fread(i, jk, 1, 18);
+    term_write(jk, 18);
     
     uint16_t rose = pciConfigReadWord(0, 31, 3, 0x20);
     printNumber(rose);
@@ -242,7 +251,21 @@ void _start(struct stivale2_struct *stivale2_struct) {
     rose = pciConfigReadWord(0, 31, 3, 0x22);
     printNumber(rose);
 
+    */
+
 	enableSerialCOM1(ioapics[0]->address);
+    checkMSI(0, 31, 2);
+    
+    // Test AHCI drivers for a successful read
+    HBA_MEM* host = (HBA_MEM*) 0xFEBD5000;
+    probePort(host);
+
+    uint16_t* s = k_malloc();
+    if (read(&host->ports[0], 0, 0, 1, s))
+    {
+        term_write((char*) s, 13);
+        term_write("File successfully read!\n", 26);
+    }
 
     for (;;) 
     {
