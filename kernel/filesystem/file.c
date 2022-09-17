@@ -47,15 +47,15 @@ int fread(inode* node, char* buffer, size_t blocks, size_t length)
     return 1; 
 }
 
-void* f_malloc(inode* node, size_t index) 
+void* f_malloc(inode* node, size_t block_index) 
 {
     for (size_t i = 0; i < 56; i++) 
     {
-        if ((table.dnode_bitmap >> i) & 1) 
+        if (!((table.dnode_bitmap >> i) & 1)) 
         {
             table.dnode_bitmap |= (1 << i);
-            node->block[index] = k_malloc();
-            return node->block[index];
+            node->block[block_index] = k_malloc();
+            return node->block[block_index];
         }
     }
     return NULL;

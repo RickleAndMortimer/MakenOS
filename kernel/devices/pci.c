@@ -3,6 +3,7 @@
 #include "pci.h"
 #include "ioapic.h"
 #include "../lib/print.h"
+#include "../kernel.h"
 #include <stdbool.h>
 
 uint16_t pciConfigReadWord(uint8_t bus, uint8_t device, uint8_t func, uint8_t offset) 
@@ -73,16 +74,43 @@ void checkAllBuses(void)
     }
 }
 
-void pciInterruptHandler(InterruptFrame* frame) 
+static void pciInterruptHandler(InterruptFrame* frame) 
 {
     printNumber(frame->int_no);
 }
 
 void enablePCIInterrupts(uint8_t bus, uint8_t device, uint8_t function, size_t ioapicaddr) 
 {
-    uint16_t interrupt = pciConfigReadWord(bus, device, function, 0x4C);
+    uint16_t interrupt = pciConfigReadWord(bus, device, function, 0x3E);
     uint16_t interrupt_line = interrupt & 0xFF;
     uint16_t interrupt_pin = interrupt >> 8;
+    // TODO: use AML to figure out which interrupt line to use
     writeIOAPIC(ioapicaddr, interrupt_line * 2 + 0x10, 0x20 + interrupt_line);
     registerInterruptHandler(0x20 + interrupt_line, &pciInterruptHandler);
+}
+
+void checkMSI(uint8_t bus, uint8_t device, uint8_t func)
+{
+    uint16_t status = pciConfigReadWord(bus, device, func, 0x4);
+    printNumber(pciConfigReadWord(bus, device, func, 0x20));
+    printNumber(pciConfigReadWord(bus, device, func, 0x22));
+    printNumber(pciConfigReadWord(bus, device, func, 0x24));
+    printNumber(pciConfigReadWord(bus, device, func, 0x26));
+    if (status & 0x10) 
+    {
+        uint16_t capabilities_pointer = pciConfigReadWord(bus, device, func, 0x36);
+        uint16_t capability = pciConfigReadWord(bus, device, func, capabilities_pointer + 0x2);
+        if ((capability & 0xFF) == 5) 
+        {
+            term_write("MSI Enabled!", 13);
+        }
+        else 
+        {
+            printNumber(capability >> 8);
+        }
+    }
+    else
+    {
+        term_write("No MSI!", 8);
+    }
 }

@@ -9,7 +9,8 @@ static struct stivale2_mmap_entry* memmap;
 
 static const char* getMemoryMapType(uint32_t type) 
 {
-    switch (type) {
+    switch (type) 
+    {
         case 0x1:
             return "Usable RAM";
         case 0x2:
@@ -33,8 +34,10 @@ static const char* getMemoryMapType(uint32_t type)
 
 void printMemoryMaps() 
 {
-    for (size_t i = 0; i < memmap_tag->entries; i++) {
-		switch (memmap_tag->memmap[i].type) {
+    for (size_t i = 0; i < memmap_tag->entries; i++) 
+    {
+		switch (memmap_tag->memmap[i].type) 
+        {
 			case 1:	
 			case 0x1000:
 			case 3:
@@ -49,7 +52,7 @@ void printMemoryMaps()
 
 				term_write("Length ", 7);
 				printNumber(memmap_tag->memmap[i].length);
-			break;
+                break;
 		}
     }
 }
@@ -71,16 +74,19 @@ uint64_t getMemoryMapLength()
 
 static void* b_malloc(uint64_t* base, size_t length, size_t size) 
 {
-    if (length <= BLOCK_SIZE && *base != 0) {
+    if (length <= BLOCK_SIZE && *base != 0) 
+    {
         return NULL;
     }
     size_t half = length / 2;
     // Allocate if the current length is enough and unallocated
-    if (half <= size && *base == 0) {
+    if (half <= size && *base == 0) 
+    {
 		return base;
     }
     // Try to find another block
-    else if (half > size) {
+    else if (half > size) 
+    {
 		uint64_t* left = b_malloc(base, half, size);
 		return left ? left : b_malloc(base + half, half, size);
     }
@@ -97,7 +103,7 @@ void* k_malloc()
 void k_free(void* base) 
 {
 	uint64_t* ptr = base;
-	for (size_t i = 0; i < BLOCK_SIZE; i++) 
+	for (size_t i = 0; i < BLOCK_SIZE / 64; i++) 
     {
 		ptr[i] = 0;
 	}
