@@ -264,7 +264,21 @@ void _start(struct stivale2_struct *stivale2_struct) {
     if (read(&host->ports[0], 0, 0, 1, s))
     {
         term_write((char*) s, 13);
-        term_write("File successfully read!\n", 26);
+        term_write("\nFile successfully read!\n", 25);
+    }
+
+    uint8_t* c = k_malloc();
+    c[0] = 'h';
+    c[1] = 'e';
+    c[2] = 'l';
+    c[3] = 'l';
+    c[4] = 'o';
+    c[5] = '\0';
+
+    if (write(&host->ports[0], 0, 0, 1, (uint16_t*) c)) 
+    {
+        term_write((char*) c, 13);
+        term_write("\nFile successfully written!\n", 28);
     }
 
     for (;;) 
