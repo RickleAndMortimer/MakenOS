@@ -15,6 +15,7 @@
 #define ATA_DEV_BUSY 0x80
 #define ATA_DEV_DRQ 0x08
 #define ATA_CMD_READ_DMA_EX     0x25
+#define ATA_CMD_WRITE_DMA_EX     0x35
  
 #define	AHCI_BASE	0x400000	// 4M
 #define AHCI_DEV_NULL 0
@@ -303,5 +304,6 @@ void stopCMD(HBA_PORT *port);
 void portRebase(HBA_PORT *port, int portno);
 int findCMDSlot(HBA_PORT* port, size_t cmd_slots);
 bool read(HBA_PORT *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf);
+bool write(HBA_PORT *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t* buf);
  
 #endif
