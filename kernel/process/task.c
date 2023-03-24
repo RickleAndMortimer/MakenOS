@@ -35,7 +35,7 @@ void createTask(Task *task, void (*main)(), uint64_t flags, uint64_t cr3)
     task->regs.rflags = flags;
     task->regs.rip = (uint64_t) main;
     task->regs.cr3 = cr3;
-    task->regs.rsp = (uint64_t) k_malloc(getMemoryMapBase(), getMemoryMapLength(), 4096) + 0x1000;
+    task->regs.rsp = (uint64_t) k_malloc(4096) + 0x1000;
     task->next = NULL;
 }
 

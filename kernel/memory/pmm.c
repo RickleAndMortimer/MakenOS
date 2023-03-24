@@ -74,37 +74,50 @@ uint64_t getMemoryMapLength()
 
 static void* b_malloc(uint64_t* base, size_t length, size_t size) 
 {
-    if (length <= BLOCK_SIZE && *base != 0) 
-    {
-        return NULL;
+    if (length <= BLOCK_SIZE) {
+        if (size <= length) {
+            *base = size;
+            memset(base + 1, 0, sizeof(void*) * size);
+            return (void*) (base + 1);
+        }
+        else {
+            return NULL;
+        }
     }
+
     size_t half = length / 2;
     // Allocate if the current length is enough and unallocated
-    if (half <= size && *base == 0) 
-    {
-		return base;
+    if (half <= size) {
+        *base = size;
+        memset(base + 1, 0, sizeof(void*) * size);
+		return (void*) (base + 1);
     }
     // Try to find another block
     else if (half > size) 
     {
-		uint64_t* left = b_malloc(base, half, size);
-		return left ? left : b_malloc(base + half, half, size);
+		void* b = b_malloc(base, half, size);
+        // If alloc is null, search blocks on the right side
+        if (b == NULL) {
+            b = b_malloc(base + half, half, size);
+        }
+
+        return b;
     }
     // Otherwise, the memory cannot be allocated
     return NULL;
 }
 
-void* k_malloc() 
+void* k_malloc(size_t size) 
 {
-    return b_malloc((uint64_t*)memmap->base, memmap->length, BLOCK_SIZE);
+    return b_malloc((uint64_t*)memmap->base, memmap->length, size);
+}
+
+void* printHeader(void* start) {
 }
 
 
 void k_free(void* base) 
 {
-	uint64_t* ptr = base;
-	for (size_t i = 0; i < BLOCK_SIZE / 64; i++) 
-    {
-		ptr[i] = 0;
-	}
+    uint64_t size = *(((uint64_t*) base) - 1);
+    memset(base, 0, size);
 }

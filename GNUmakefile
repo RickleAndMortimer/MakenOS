@@ -6,9 +6,8 @@ all-hdd: barebones.hdd
 
 .PHONY: debug
 debug: barebones.iso
-	objcopy --only-keep-debug kernel/kernel.elf kernel.sym
-	objcopy --strip-debug kernel/kernel.elf
-	qemu-system-x86_64 -s -S -M q35 -m 2G -drive file=test.img format=raw -cdrom barebones.iso -boot d  
+	objcopy --only-keep-debug "./kernel/kernel.elf" "kernel.sym"
+	qemu-system-x86_64 -s -S -M q35 -m 2G -drive file=test.img,format=raw -cdrom barebones.iso -boot d  
 
 .PHONY: run
 run: barebones.iso

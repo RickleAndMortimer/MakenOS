@@ -1,6 +1,5 @@
 #include "devices/apic.h"
-#include "interrupts/idt.h"
-#include "devices/ioapic.h"
+#include "interrupts/idt.h" #include "devices/ioapic.h"
 #include "interfaces/description_tables/madt.h"
 #include "process/task.h"
 #include "memory/paging.h"
@@ -260,14 +259,14 @@ void _start(struct stivale2_struct *stivale2_struct) {
     HBA_MEM* host = (HBA_MEM*) 0xFEBD5000;
     probePort(host);
 
-    uint16_t* s = k_malloc();
+    uint16_t* s = k_malloc(4096);
     if (read(&host->ports[0], 0, 0, 1, s))
     {
         term_write((char*) s, 13);
         term_write("\nFile successfully read!\n", 25);
     }
 
-    uint8_t* c = k_malloc();
+    uint8_t* c = k_malloc(4096);
     c[0] = 'h';
     c[1] = 'e';
     c[2] = 'l';
@@ -281,6 +280,11 @@ void _start(struct stivale2_struct *stivale2_struct) {
         term_write("\nFile successfully written!\n", 28);
     }
 
+    volatile uint8_t* g = k_malloc(400);
+    g[0] = 4;
+    g[1] = 8;
+    g[2] = 12;
+    k_free(g);
     for (;;) 
     {
 		__asm__ volatile ("hlt");

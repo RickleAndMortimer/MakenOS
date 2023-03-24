@@ -12,13 +12,14 @@ typedef struct Node {
     struct Node* next;
 } Node;
 
-typedef struct List {
+typedef struct alloc_entry {
     size_t size;
-    Node* head;
-} List;
+    void* base;
+} alloc_entry;
 
 void printMemoryMaps();
 void setMemoryMap(uint8_t selection);
+void* printHeader(void* start);
 void* getMemoryMapBase();
 uint64_t getMemoryMapLength();
 
