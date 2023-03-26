@@ -38,7 +38,16 @@ void* memcpy(void* destination, void* source, size_t num)
     uint8_t* k = destination;
     uint8_t* l = source;
     for (size_t i = 0; i < num; i++) {
-	k[i] = l[i];
+        k[i] = l[i];
+    }
+    return destination;
+}
+
+char* strcpy(char* destination, char* source) 
+{
+    size_t length = strlen(source);
+    for (size_t i = 0; i < length; i++) {
+        destination[i] = source[i];
     }
     return destination;
 }

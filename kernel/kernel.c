@@ -1,18 +1,22 @@
-#include "devices/apic.h"
-#include "interrupts/idt.h" #include "devices/ioapic.h"
-#include "interfaces/description_tables/madt.h"
-#include "process/task.h"
-#include "memory/paging.h"
-#include "devices/pic.h"
-#include "devices/pci.h"
-#include "devices/pit.h"
-#include "memory/pmm.h"
-#include "lib/print.h"
-#include "devices/ps2.h"
-#include "stivale2.h"
-#include "devices/serial.h"
 #include "devices/ahci.h"
+#include "devices/apic.h"
+#include "devices/ioapic.h"
+#include "devices/pci.h"
+#include "devices/pic.h"
+#include "devices/pit.h"
+#include "devices/ps2.h"
+#include "devices/serial.h"
 #include "filesystem/file.h"
+#include "filesystem/initrd.h"
+#include "interfaces/description_tables/madt.h"
+#include "interrupts/idt.h" 
+#include "lib/print.h"
+#include "memory/paging.h"
+#include "memory/pmm.h"
+#include "process/task.h"
+#include "stivale2.h"
+#include "limine.h"
+#include "lib/string.h"
 
 extern RSDPDescriptor20 *rsdp_descriptor;
 extern XSDT* xsdt;
@@ -49,6 +53,7 @@ static struct stivale2_header_tag_framebuffer framebuffer_hdr_tag = {
     .framebuffer_height = 0,
     .framebuffer_bpp    = 0
 };
+
 static struct stivale2_header_tag_smp smp_hdr_tag = {
     .tag = {
         .identifier = STIVALE2_HEADER_TAG_SMP_ID,
@@ -56,7 +61,6 @@ static struct stivale2_header_tag_smp smp_hdr_tag = {
     },
     .flags = 0
 };
-
 
 // The stivale2 specification says we need to define a "header structure".
 // This structure needs to reside in the .stivale2hdr ELF section in order
@@ -190,8 +194,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     memmap_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
     // Initialize paging and memory management
-    initPML4();
-    printMemoryMaps();
+    initPML4(); printMemoryMaps();
     setMemoryMap(4);
 
     // Initialize devices
@@ -267,12 +270,7 @@ void _start(struct stivale2_struct *stivale2_struct) {
     }
 
     uint8_t* c = k_malloc(4096);
-    c[0] = 'h';
-    c[1] = 'e';
-    c[2] = 'l';
-    c[3] = 'l';
-    c[4] = 'o';
-    c[5] = '\0';
+    c = "hello";
 
     if (write(&host->ports[0], 0, 0, 1, (uint16_t*) c)) 
     {
@@ -280,11 +278,35 @@ void _start(struct stivale2_struct *stivale2_struct) {
         term_write("\nFile successfully written!\n", 28);
     }
 
-    volatile uint8_t* g = k_malloc(400);
+    uint8_t* g = k_malloc(400);
     g[0] = 4;
     g[1] = 8;
     g[2] = 12;
     k_free(g);
+
+    int i = 0;
+    struct dirent *node = 0;
+    initialise_initrd((uint64_t) (k_malloc(4000)));
+    while ((node = readdir_fs(fs_root, i)) != 0)
+    {
+        term_write("Found file ", strlen("Found file "));
+        term_write(node->name, strlen(node->name));
+        fs_node_t *fsnode = finddir_fs(fs_root, node->name);
+
+        if ((fsnode->flags&0x7) == FS_DIRECTORY)
+            term_write("\n\t(directory)\n", strlen("\n\t(directory)\n"));
+        else
+        {
+            term_write("\n\t contents: \"", strlen("\n\t contents: \""));
+            char buf[256];
+            size_t sz = read_fs(fsnode, 0, 256, buf);
+            int j;
+            term_write(buf, strlen(buf));
+            term_write("\"\n", strlen("\"\n"));
+        }
+        i++;
+    }
+
     for (;;) 
     {
 		__asm__ volatile ("hlt");

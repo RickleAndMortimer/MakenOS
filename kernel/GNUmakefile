@@ -61,6 +61,9 @@ all: $(KERNEL)
 stivale2.h:
 	curl https://raw.githubusercontent.com/stivale/stivale/master/stivale2.h -o $@
 
+limine.h:
+	curl https://raw.githubusercontent.com/limine-bootloader/limine/trunk/limine.h -o $@
+
 %.o: %.asm
 	nasm -felf64 $< -o $@
 

@@ -75,7 +75,7 @@ uint64_t getMemoryMapLength()
 static void* b_malloc(uint64_t* base, size_t length, size_t size) 
 {
     if (length <= BLOCK_SIZE) {
-        if (size <= length) {
+        if (size + 1 <= length && *((uint64_t*) base) == 0) {
             *base = size;
             memset(base + 1, 0, sizeof(void*) * size);
             return (void*) (base + 1);
@@ -87,7 +87,7 @@ static void* b_malloc(uint64_t* base, size_t length, size_t size)
 
     size_t half = length / 2;
     // Allocate if the current length is enough and unallocated
-    if (half <= size) {
+    if (half <= size + 1 && *((uint64_t*) base) == 0) {
         *base = size;
         memset(base + 1, 0, sizeof(void*) * size);
 		return (void*) (base + 1);
@@ -111,10 +111,6 @@ void* k_malloc(size_t size)
 {
     return b_malloc((uint64_t*)memmap->base, memmap->length, size);
 }
-
-void* printHeader(void* start) {
-}
-
 
 void k_free(void* base) 
 {

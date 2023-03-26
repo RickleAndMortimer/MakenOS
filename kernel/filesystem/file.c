@@ -1,62 +1,52 @@
 #include "file.h"
-#include "../lib/string.h"
-#include "../memory/pmm.h"
 
-static inode_table table;
+fs_node_t* fs_root = NULL; // The root of the filesystem.
 
-inode_table* initRamFS() 
+size_t read_fs(fs_node_t *node, size_t offset, uint32_t size, uint8_t* buffer)
 {
-    table.v.id = 1;
-    table.v.length = sizeof(table);
-    table.v.inode_len = sizeof(table.inodes);
-    table.v.data_blocks = sizeof(56 * 4096);
-    // root directory
-    table.inodes[0] = (inode) { 0,0,0,0,0,0,0,0,0,0,0,0 };
-    return &table; 
+	// Has the node got a read callback?
+	if (node->read != 0)
+		return node->read(node, offset, size, buffer);
+	else
+		return 0;
 }
 
-inode* fopen(char* filename) 
+size_t write_fs(fs_node_t *node, size_t offset, size_t size, uint8_t* buffer)
 {
-    for (size_t i = 0; i < 16; i++) 
-    {
-        if (!((table.inode_bitmap >> i) & 1)) 
-        {
-            table.inode_bitmap |= (1 << i);
-            return &table.inodes[i]; 
-        }
-    }
-    return NULL;
+	// Has the node got a read callback?
+	if (node->write != 0)
+		return node->write(node, offset, size, buffer);
+	else
+		return 0;
 }
 
-int fwrite(inode* node, char* data, size_t len) 
+void open_fs(fs_node_t *node, uint8_t read, uint8_t write)
 {
-    memcpy(&node->block[0], data, len);
-    return 1;
+	// Has the node got a read callback?
+	if (node->open != 0)
+		node->open(node);
 }
 
-int fread(inode* node, char* buffer, size_t blocks, size_t length) 
+void close_fs(fs_node_t *node)
 {
-    for (size_t i = 0; i < blocks; i++) 
-    {
-        if (node->block[i] == NULL) 
-        {
-            continue;
-        }
-        memcpy(buffer, &node->block[i], length);
-    }
-    return 1; 
+	// Has the node got a read callback?
+	if (node->close != 0)
+		node->close(node);
 }
 
-void* f_malloc(inode* node, size_t block_index) 
+struct dirent *readdir_fs(fs_node_t *node, size_t index) 
 {
-    for (size_t i = 0; i < 56; i++) 
-    {
-        if (!((table.dnode_bitmap >> i) & 1)) 
-        {
-            table.dnode_bitmap |= (1 << i);
-            node->block[block_index] = k_malloc();
-            return node->block[block_index];
-        }
-    }
-    return NULL;
+	if (node->close != 0 && (node->flags&0x7) == FS_DIRECTORY)
+		return node->readdir(node, index);
+	else
+		return 0;
 }
+
+fs_node_t* finddir_fs(fs_node_t *node, char *name)
+{
+	if (node->finddir != 0 && (node->flags&0x7) == FS_DIRECTORY)
+		return node->finddir(node, name);
+	else
+		return 0;
+}
+
