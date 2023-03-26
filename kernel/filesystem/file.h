@@ -4,53 +4,44 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef struct vfs 
-{
-    uint16_t id;
-    uint64_t length;
-    uint64_t inode_len;
-    uint64_t data_blocks;
-} vfs;
+#define FS_FILE        0x01
+#define FS_DIRECTORY   0x02
+#define FS_CHARDEVICE  0x03
+#define FS_BLOCKDEVICE 0x04
+#define FS_PIPE        0x05
+#define FS_SYMLINK     0x06
+#define FS_MOUNTPOINT  0x08 
 
-typedef struct inode 
-{
-    uint16_t mode; 
-    uint16_t uid; 
-    uint32_t size; 
-    uint32_t time; 
-    uint32_t ctime; 
-    uint32_t mtime; 
-    uint32_t dtime; 
-    uint16_t gid; 
-    uint16_t links_count; 
-    uint32_t blocks; 
-    uint32_t flags; 
-    uint32_t osd1; 
-    void* block[15]; 
-    uint32_t generation;
-    uint32_t file_acl;
-    uint32_t dir_acl;
-} inode;
+struct dirent {
+    char name[128];    
+    uint32_t ino;
+};
 
-typedef struct directory_entry 
-{
-    char name[256];
-    uint16_t inum;
-    uint32_t rec_size;
-    uint32_t strlen;
-} directory_entry;
+typedef struct fs_node {
+    char name[128];
+    uint32_t flags;
+    uint32_t mask;        // The permissions mask.
+    uint32_t uid;         // The owning user.
+    uint32_t gid;         // The owning group.
+    uint32_t inode;       // This is device-specific - provides a way for a filesystem to identify files.
+    uint32_t length;      // Size of the file, in bytes.
+    uint32_t impl;        // An implementation-defined number.
+    size_t (*read)(struct fs_node*, size_t, size_t, uint8_t*);
+    size_t (*write)(struct fs_node*, size_t, size_t, uint8_t*);
+    void (*open)(struct fs_node*);
+    void (*close)(struct fs_node*);
+    struct dirent* (*readdir)(struct fs_node*, size_t);
+    struct fs_node* (*finddir)(struct fs_node*, char*);
+    struct fs_node* ptr;
+} fs_node_t;
 
-typedef struct inode_table {
-    vfs v;
-    uint16_t inode_bitmap;
-    uint64_t dnode_bitmap;
-    inode inodes[16]; 
-} inode_table;
+extern fs_node_t *fs_root; // The root of the filesystem.
 
-inode* fopen(char* filename);
-int fwrite(inode* node, char* data, size_t len);
-int fread(inode* i, char* buffer, size_t blocks, size_t length);
-void* f_malloc(inode* node, size_t block_index);
-inode_table* initRamFS();
+size_t read_fs(fs_node_t *node, size_t offset, uint32_t size, uint8_t* buffer);
+size_t write_fs(fs_node_t *node, size_t offset, size_t size, uint8_t* buffer);
+void open_fs(fs_node_t *node, uint8_t read, uint8_t write);
+void close_fs(fs_node_t *node);
+struct dirent* readdir_fs(fs_node_t *node, size_t index);
+fs_node_t* finddir_fs(fs_node_t *node, char *name);
 
 #endif

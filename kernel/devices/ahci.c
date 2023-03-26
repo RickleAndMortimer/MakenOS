@@ -246,7 +246,7 @@ bool write(HBA_PORT *port, uint32_t startl, uint32_t starth, uint32_t count, uin
 
 	int spin = 0;
 	int slot = findCMDSlot(port, 32);
-;
+
 	if (slot == -1)
 		return false;
  
