@@ -13,6 +13,8 @@
 #define IA32_APIC_BASE_MSR_ENABLE 0x800
 #define APIC_EOI_REGISTER 0xB0
 
+extern void term_write(const char*, size_t);
+
 enum 
 {
     CPUID_FEAT_ECX_SSE3         = 1 << 0, 
@@ -180,7 +182,7 @@ void enableAPICTimer(uint32_t frequency)
     writeAPICRegister(0x380, 0xFFFFFFFF);
     // Sleep for 10 ms
     term_write("Calibrating APIC Timer\n", 24);
-    PIT_sleep(1);
+    PIT_sleep(10);
     term_write("Finished Calibration\n", 22);
     // Mask APIC Timer interrupt
     writeAPICRegister(0x320, 0x10000);

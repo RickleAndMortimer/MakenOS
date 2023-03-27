@@ -2,10 +2,10 @@
 #include "../lib/string.h"
 #include "../lib/print.h"
 #include "../kernel.h"
-#include <stivale2.h>
+#include "../limine.h"
 
-extern struct stivale2_struct_tag_memmap* memmap_tag;
-static struct stivale2_mmap_entry* memmap;
+extern struct limine_memmap_response* memmap_info;
+static struct limine_memmap_entry* memmap;
 
 static const char* getMemoryMapType(uint32_t type) 
 {
@@ -34,9 +34,10 @@ static const char* getMemoryMapType(uint32_t type)
 
 void printMemoryMaps() 
 {
-    for (size_t i = 0; i < memmap_tag->entries; i++) 
+    for (size_t i = 0; i < memmap_info->entry_count; i++) 
     {
-		switch (memmap_tag->memmap[i].type) 
+        struct limine_memmap_entry* entry = memmap_info->entries[i];
+		switch (entry->type) 
         {
 			case 1:	
 			case 0x1000:
@@ -44,14 +45,14 @@ void printMemoryMaps()
 				term_write("Entry ", 6);
 				printNumber(i);
 
-				const char* type = getMemoryMapType(memmap_tag->memmap[i].type);
+				const char* type = getMemoryMapType(entry->type);
 				term_write(type, strlen(type));
 
 				term_write("\nBase ", 6);
-				printNumber(memmap_tag->memmap[i].base);
+				printNumber(entry->base);
 
 				term_write("Length ", 7);
-				printNumber(memmap_tag->memmap[i].length);
+				printNumber(entry->length);
                 break;
 		}
     }
@@ -59,7 +60,7 @@ void printMemoryMaps()
 
 void setMemoryMap(uint8_t selection) 
 {
-	memmap = &(memmap_tag->memmap[selection]);
+	memmap = memmap_info->entries[selection];
 }
 
 void* getMemoryMapBase() 

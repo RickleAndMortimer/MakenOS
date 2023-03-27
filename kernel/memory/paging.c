@@ -3,7 +3,7 @@
 #include "../lib/print.h"
 
 static PageTable* pml4;
-extern struct stivale2_mmap_entry* memmap;
+extern struct limine_memmap_entry** memmaps;
 
 static inline void flushTLB(void* page) 
 {

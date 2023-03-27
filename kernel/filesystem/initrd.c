@@ -1,6 +1,8 @@
 #include "initrd.h"
 #include "file.h"
 #include "../lib/string.h"
+#include "../limine.h"
+#include "../kernel.h"
 
 initrd_header_t* initrd_header;	  
 initrd_file_header_t* file_headers;
@@ -10,6 +12,8 @@ fs_node_t* root_nodes;
 int nroot_nodes;
 
 struct dirent dirent;
+
+extern struct limine_module_request module_request;
 
 static size_t initrd_read(fs_node_t* node, size_t offset, size_t size, uint8_t* buffer)
 {
@@ -57,6 +61,7 @@ fs_node_t* initialise_initrd(size_t location)
 	// Initialise the main and file header pointers and populate the root directory.
 	initrd_header = (initrd_header_t*) location;
 	file_headers = (initrd_file_header_t*) (location + sizeof(initrd_header_t));
+    initrd_header->nfiles = module_request.response->module_count;
 	// Initialise the root directory.
 	initrd_root = (fs_node_t*) k_malloc(sizeof(fs_node_t));
 	strcpy(initrd_root->name, "initrd");
