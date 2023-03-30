@@ -18,7 +18,6 @@ struct dirent {
 };
 
 typedef struct fs_node {
-    char name[128];
     uint32_t flags;
     uint32_t mask;        // The permissions mask.
     uint32_t uid;         // The owning user.
@@ -35,13 +34,13 @@ typedef struct fs_node {
     struct fs_node* ptr;
 } fs_node_t;
 
-extern fs_node_t *fs_root; // The root of the filesystem.
+extern fs_node_t* fs_root; // The root of the filesystem.
 
-size_t read_fs(fs_node_t *node, size_t offset, uint32_t size, uint8_t* buffer);
-size_t write_fs(fs_node_t *node, size_t offset, size_t size, uint8_t* buffer);
-void open_fs(fs_node_t *node, uint8_t read, uint8_t write);
-void close_fs(fs_node_t *node);
-struct dirent* readdir_fs(fs_node_t *node, size_t index);
-fs_node_t* finddir_fs(fs_node_t *node, char *name);
+size_t read_fs(fs_node_t* node, size_t offset, uint32_t size, uint8_t* buffer);
+size_t write_fs(fs_node_t* node, size_t offset, size_t size, uint8_t* buffer);
+void open_fs(fs_node_t* node, uint8_t read, uint8_t write);
+void close_fs(fs_node_t* node);
+struct dirent* readdir_fs(fs_node_t* node, size_t index);
+fs_node_t* finddir_fs(fs_node_t* node, char* name);
 
 #endif

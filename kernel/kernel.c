@@ -44,7 +44,7 @@ static volatile struct limine_stack_size_request stack_size_request = {
     .stack_size = 8192,
 };
 
-extern struct limine_module_request module_request = {
+static volatile struct limine_module_request module_request = {
     .id = LIMINE_MODULE_REQUEST,
     .revision = 0
 };
@@ -74,7 +74,7 @@ extern void term_write(const char *string, size_t length) {
 
 // Kernel entrypoint
 void _start(void) {
-    const char* hello_msg = "Hello World";
+    // set up terminal
     main_terminal = terminal_request.response->terminals[0];
 
     // Access RSDP for ACPI
@@ -137,19 +137,11 @@ void _start(void) {
 
     term_write("results done\n", 14);
 
-
     // Initialize paging and memory management
     memmap_info = memmap_request.response;
     initPML4(); 
     printMemoryMaps();
     setMemoryMap(4);
-
-    // Initialize devices
-    remapPIC(0x20, 0x28);
-    initIdt();
-
-    enableAPIC();
-    enableAPICTimer(10);
 
     /* test that paging works
    
@@ -175,30 +167,6 @@ void _start(void) {
 
     */
 
-    /* Test basic filesystem code
-
-    inode_table* f = initRamFS();
-    inode* i = fopen("neighbor");
-    
-    char jk[18];
-    f_malloc(i, 0);
-    fwrite(i, "jerry seinfelding\n", 19);
-
-    fread(i, jk, 1, 19);
-    term_write(jk, 19);
-
-    fwrite(i, "jerry seinfelded\n", 18);
-    fread(i, jk, 1, 18);
-    term_write(jk, 18);
-    
-    uint16_t rose = pciConfigReadWord(0, 31, 3, 0x20);
-    printNumber(rose);
-
-    rose = pciConfigReadWord(0, 31, 3, 0x22);
-    printNumber(rose);
-
-    */
-
 	enableSerialCOM1(ioapics[0]->address);
     checkMSI(0, 31, 2);
     
@@ -206,43 +174,33 @@ void _start(void) {
     HBA_MEM* host = (HBA_MEM*) 0xFEBD5000;
     probePort(host);
 
-	initTasking();
-    uint16_t* s = k_malloc(4096);
-    if (read(&host->ports[0], 0, 0, 1, s))
+    uint16_t* s = k_malloc(0x8000);
+    if (ahci_read(&host->ports[0], 2, 0, 1, s))
     {
-        term_write((char*) s, 13);
         term_write("\nFile successfully read!\n", 25);
     }
 
     uint8_t* c = k_malloc(4096);
-    c = "jello";
-
-    if (write(&host->ports[0], 0, 0, 1, (uint16_t*) c)) 
-    {
-        term_write((char*) c, 6);
-        term_write("\nFile successfully written!\n", 28);
-    }
-
-    uint8_t* g = k_malloc(400);
-    g[0] = 4;
-    g[1] = 8;
-    g[2] = 12;
-    printNumber(g[0]);
-    printNumber(g[1]);
-    printNumber(g[2]);
-    k_free(g);
-
-    int i = 0;
-    struct dirent *node = 0;
+    c[0] = 'h';
+    c[1] = 'i';
+    c[2] = '_';
+    c[3] = 't';
+    c[4] = 'h';
+    c[5] = 'e';
+    c[6] = 'r';
+    c[7] = 'e';
+    c[8] = '\0';
 
     struct limine_file* module = module_request.response->modules[0];
-    void* cl = module->address;
 
+    // start initrd
     size_t initrd_location = (size_t) module->address;
-    size_t initrd_end = (size_t)(module->address + 1);
     fs_root = initialise_initrd(initrd_location);
 
-    while ((node = readdir_fs(fs_root, i)) != 0)
+    int i = 0;
+    struct dirent* node = NULL;
+    uint8_t buf[256];
+    while ((node = readdir_fs(fs_root, i)) != NULL)
     {
         term_write("Found file ", strlen("Found file "));
         term_write(node->name, strlen(node->name));
@@ -253,16 +211,23 @@ void _start(void) {
         else
         {
             term_write("\n\t contents: \"", strlen("\n\t contents: \""));
-            char buf[256];
-            size_t sz = read_fs(fsnode, 0, 256, buf);
-            int j;
+            read_fs(fsnode, 0, 256, buf);
             term_write(buf, strlen(buf));
             term_write("\"\n", strlen("\"\n"));
+            memset(buf, 0, 256);
         }
         i++;
     }
 
+    // Initialize interrupt & interrupt devices
+    remapPIC(0x20, 0x28);
+    initIdt();
+
+    enableAPIC();
+    enableAPICTimer(10);
 	enableKeyboard(ioapics[0]->address);
+	initTasking();
+    doIt();
 
     for (;;) 
     {

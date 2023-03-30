@@ -1,6 +1,8 @@
-#include "print.h"
 #include <stdlib.h>
+
+#include "print.h"
 #include "string.h"
+#include "stdlib.h"
 #include "../kernel.h"
 
 void printNumber(uint64_t num) 
