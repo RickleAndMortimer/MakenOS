@@ -297,13 +297,12 @@ typedef struct HBA_CMD_TBL
 	HBA_PRDT_ENTRY prdt_entry[1];	// Physical region descriptor table entries, 0 ~ 65535
 } HBA_CMD_TBL;
 
-
-void probePort(HBA_MEM *abar);
-void startCMD(HBA_PORT *port);
-void stopCMD(HBA_PORT *port);
-void portRebase(HBA_PORT *port, int portno);
+void probePort(HBA_MEM* abar);
+void startCMD(HBA_PORT* port);
+void stopCMD(HBA_PORT* port);
+void portRebase(HBA_PORT* port, int portno);
 int findCMDSlot(HBA_PORT* port, size_t cmd_slots);
-bool read(HBA_PORT *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf);
-bool write(HBA_PORT *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t* buf);
+bool ahci_read(HBA_PORT* port, uint32_t start_l, uint32_t start_h, uint32_t count, uint16_t* buf);
+bool ahci_write(HBA_PORT* port, uint32_t start_l, uint32_t start_h, uint32_t count, uint16_t* buf);
  
 #endif

@@ -9,7 +9,6 @@ ENTRY(_start)
 /* MMU permissions */
 PHDRS
 {
-    null    PT_NULL    FLAGS(0) ;                   /* Null segment */
     text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
     rodata  PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
     data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
@@ -30,12 +29,6 @@ SECTIONS
     /* Move to the next memory page for .rodata */
     . += CONSTANT(MAXPAGESIZE);
 
-    /* We place the .stivale2hdr section containing the header in its own section, */
-    /* and we use the KEEP directive on it to make sure it doesn't get discarded. */
-    .stivale2hdr : {
-        KEEP(*(.stivale2hdr))
-    } :rodata
-
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
@@ -51,4 +44,9 @@ SECTIONS
         *(COMMON)
         *(.bss .bss.*)
     } :data
+
+    /DISCARD/ : {
+        *(.eh_frame)
+        *(.note .note.*)
+    }
 }

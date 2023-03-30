@@ -8,7 +8,7 @@ uint32_t frequency = 1193180;
 
 static void PIT_callback(InterruptFrame* frame)
 {
-    sendEOIPIC(frame->int_no);
+    sendEOIPIC(0);
 }
 
 void initPIT(uint32_t new_frequency)

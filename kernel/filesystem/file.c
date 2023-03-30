@@ -34,19 +34,19 @@ void close_fs(fs_node_t *node)
 		node->close(node);
 }
 
-struct dirent *readdir_fs(fs_node_t *node, size_t index) 
+struct dirent* readdir_fs(fs_node_t *node, size_t index) 
 {
-	if (node->close != 0 && (node->flags&0x7) == FS_DIRECTORY)
+	if (node->readdir != 0 && (node->flags & 0x7) == FS_DIRECTORY)
 		return node->readdir(node, index);
 	else
-		return 0;
+		return NULL;
 }
 
 fs_node_t* finddir_fs(fs_node_t *node, char *name)
 {
-	if (node->finddir != 0 && (node->flags&0x7) == FS_DIRECTORY)
+	if (node->finddir != 0 && (node->flags & 0x7) == FS_DIRECTORY)
 		return node->finddir(node, name);
 	else
-		return 0;
+		return NULL;
 }
 
