@@ -2,6 +2,7 @@
 override MAKEFLAGS += -rR
 
 override IMAGE_NAME := MakenOS
+override TEST_DRIVE := test.img
 
 .PHONY: all
 all: $(IMAGE_NAME).iso
@@ -11,12 +12,12 @@ all-hdd: $(IMAGE_NAME).hdd
 
 .PHONY: run
 run: $(IMAGE_NAME).iso
-	qemu-system-x86_64 -M q35 -m 2G -drive file=test.img,format=raw -cdrom $(IMAGE_NAME).iso -boot d
+	qemu-system-x86_64 -M q35 -m 2G -drive file=$(TEST_DRIVE),format=raw -cdrom $(IMAGE_NAME).iso -boot d
 
 .PHONY: debug
 debug: $(IMAGE_NAME).iso
 	objcopy --only-keep-debug "./kernel/kernel.elf" "./kernel.sym"
-	qemu-system-x86_64 -s -S -M q35 -m 2G -drive file=test.img,format=raw -cdrom $(IMAGE_NAME).iso -boot d
+	qemu-system-x86_64 -s -S -M q35 -m 2G -drive file=$(TEST_DRIVE),format=raw -cdrom $(IMAGE_NAME).iso -boot d
 
 .PHONY: run-uefi
 run-uefi: ovmf $(IMAGE_NAME).iso
@@ -46,7 +47,7 @@ $(IMAGE_NAME).iso: limine kernel
 	rm -rf iso_root
 	mkdir -p iso_root
 	cp kernel/kernel.elf \
-		limine.cfg limine/limine.sys limine/limine-cd.bin limine/limine-cd-efi.bin hi.txt iso_root/
+		limine.cfg limine/limine.sys limine/limine-cd.bin limine/limine-cd-efi.bin initrd.img iso_root/
 	xorriso -as mkisofs -b limine-cd.bin \
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
 		--efi-boot limine-cd-efi.bin \
